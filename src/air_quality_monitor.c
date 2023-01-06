@@ -55,7 +55,7 @@ int air_quality_monitor_update_temperature(void)
 		LOG_INF("Attribute T:%10d", temperature_attribute);
 
 		/* Set ZCL attribute */
-		zb_zcl_status_t status = zb_zcl_set_attr_val(air_quality_monitor_ENDPOINT_NB,
+		zb_zcl_status_t status = zb_zcl_set_attr_val(AIR_QUALITY_MONITOR_ENDPOINT_NB,
 													 ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT,
 													 ZB_ZCL_CLUSTER_SERVER_ROLE,
 													 ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
@@ -91,7 +91,7 @@ int air_quality_monitor_update_humidity(void)
 		LOG_INF("Attribute H:%10d", humidity_attribute);
 
 		zb_zcl_status_t status = zb_zcl_set_attr_val(
-			air_quality_monitor_ENDPOINT_NB,
+			AIR_QUALITY_MONITOR_ENDPOINT_NB,
 			ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT,
 			ZB_ZCL_CLUSTER_SERVER_ROLE,
 			ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID,

@@ -1,0 +1,28 @@
+{
+    "name": "Nordic SDK sandbox",
+    "image": "nordicplayground/nrfconnect-sdk:v2.2-branch",
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "extensions": [
+		"ms-vscode.cpptools",
+		"mutantdino.resourcemonitor",
+		"nick-rudenko.back-n-forth",
+		"ms-vscode.cmake-tools",
+		"marus25.cortex-debug",
+		"nordic-semiconductor.nrf-devicetree",
+		"nordic-semiconductor.nrf-kconfig",
+		"cschlosser.doxdocgen"
+	],
+    "initializeCommand": "[ -c /dev/ttyACM0 ] || sudo mknod /dev/ttyACM0 c 89 1",
+    "workspaceMount": "",
+    "workspaceFolder": "/workdir/project",
+    "containerUser": "root",
+    "postCreateCommand": "west update && west build -b xiao_ble -- -DCONFIG_BOOT_DELAY=5000",
+    "runArgs": [
+        "--volume=${localWorkspaceFolder}:/workdir/project:Z",
+        "--userns=keep-id",
+        "--device=/dev/ttyACM0",
+        "--group-add=dialout"
+    ]
+}

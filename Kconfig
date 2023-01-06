@@ -1,0 +1,27 @@
+#
+# Copyright (c) 2023 Jan Gnip
+# Copyright (c) 2022 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+if USB
+config USB_DEVICE_PID
+	default 0x53A0
+endif
+
+# How often sensor data is read
+config AIR_MONITOR_CHECK_PERIOD_SECONDS
+	int
+	default 5
+
+# Delay after app initialization
+config FIRST_AIR_MONITOR_CHECK_DELAY_SECONDS
+	int
+	default 5
+
+source "Kconfig.zephyr"
+
+module = ZIGBEE_AIR_QUALITY_MONITOR
+module-str = Zigbee air quality monitor
+source "subsys/logging/Kconfig.template.log_config"

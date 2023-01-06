@@ -18,7 +18,7 @@
     "workspaceMount": "",
     "workspaceFolder": "/workdir/project",
     "containerUser": "root",
-    "postCreateCommand": "west update && west build -b xiao_ble -- -DCONFIG_BOOT_DELAY=5000",
+    "postCreateCommand": "west update && west build -b xiao_ble",
     "runArgs": [
         "--volume=${localWorkspaceFolder}:/workdir/project:Z",
         "--userns=keep-id",

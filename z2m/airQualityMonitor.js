@@ -7,8 +7,8 @@ const e = exposes.presets;
 const ea = exposes.access;
 
 const definition = {
-    zigbeeModel: ['AirQualityMonitor'],
-    model: 'AirQualityMonitor_v0.1',
+    zigbeeModel: ['AirQualityMonitor_v1.0'],
+    model: 'AirQualityMonitor_v1.0',
     vendor: 'DIY',
     description: 'Air quality monitor',
     fromZigbee: [fz.temperature, fz.humidity],

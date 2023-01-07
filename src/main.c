@@ -27,12 +27,12 @@
 #define ZIGBEE_MANUF_NAME "DIY"
 
 /* Model number assigned by manufacturer (32-bytes long string). */
-#define ZIGBEE_MODEL_ID "AirQualityMonitor_v0.1"
+#define ZIGBEE_MODEL_ID "AirQualityMonitor_v1.0"
 
 /* First 8 bytes specify the date of manufacturer of the device
  * in ISO 8601 format (YYYYMMDD). The rest (8 bytes) are manufacturer specific.
  */
-#define ZIGBEE_DATE_CODE "20230105"
+#define ZIGBEE_DATE_CODE "20230107"
 
 /* Delay for console initialization */
 #define WAIT_FOR_CONSOLE_MSEC 100
@@ -420,7 +420,7 @@ void main(void)
 {
 	gpio_init();
 #ifdef CONFIG_USB_DEVICE_STACK
-	wait_for_console();
+	//wait_for_console();
 #endif /* CONFIG_USB_DEVICE_STACK */
 
 	air_quality_monitor_init();

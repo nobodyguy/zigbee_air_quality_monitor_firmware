@@ -11,6 +11,7 @@
 #include <zcl/zb_zcl_temp_measurement_addons.h>
 #include <zcl/zb_zcl_basic_addons.h>
 
+#include "zcl/zb_zcl_concentration_measurement.h"
 #include "sensor.h"
 
 /* Zigbee Cluster Library 4.4.2.2.1.1: MeasuredValue = 100x temperature in degrees Celsius */
@@ -39,17 +40,17 @@
 	ZCL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_MULTIPLIER)
 
 /* Number chosen for the single endpoint provided by air quality monitor */
-#define AIR_QUALITY_MONITOR_ENDPOINT_NB 42
+#define AIR_QUALITY_MONITOR_ENDPOINT_NB 1
 
 /* Temperature sensor device version */
 #define ZB_HA_DEVICE_VER_TEMPERATURE_SENSOR 0
-/* Basic, identify, temperature, humidity */
-#define ZB_HA_AIR_QUALITY_MONITOR_IN_CLUSTER_NUM 4
+/* Basic, identify, temperature, humidity, measurement */
+#define ZB_HA_AIR_QUALITY_MONITOR_IN_CLUSTER_NUM 5
 /* Identify */
 #define ZB_HA_AIR_QUALITY_MONITOR_OUT_CLUSTER_NUM 1
 
-/* Temperature, humidity */
-#define ZB_HA_AIR_QUALITY_MONITOR_REPORT_ATTR_COUNT 2
+/* Temperature, humidity, co2, ???linkquality??? */
+#define ZB_HA_AIR_QUALITY_MONITOR_REPORT_ATTR_COUNT 4
 
 #define ZB_HA_DECLARE_AIR_QUALITY_MONITOR_CLUSTER_LIST(                              \
 	cluster_list_name,                                                               \
@@ -57,7 +58,8 @@
 	identify_client_attr_list,                                                       \
 	identify_server_attr_list,                                                       \
 	temperature_measurement_attr_list,                                               \
-	humidity_measurement_attr_list)                                                  \
+	humidity_measurement_attr_list,                                                  \
+	concentration_measurement_attr_list)                                             \
 	zb_zcl_cluster_desc_t cluster_list_name[] =                                      \
 		{                                                                            \
 			ZB_ZCL_CLUSTER_DESC(                                                     \
@@ -82,6 +84,12 @@
 				ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT,                          \
 				ZB_ZCL_ARRAY_SIZE(humidity_measurement_attr_list, zb_zcl_attr_t),    \
 				(humidity_measurement_attr_list),                                    \
+				ZB_ZCL_CLUSTER_SERVER_ROLE,                                          \
+				ZB_ZCL_MANUF_CODE_INVALID),                                          \
+			ZB_ZCL_CLUSTER_DESC(                                                     \
+				ZB_ZCL_CLUSTER_ID_CONCENTRATION_MEASUREMENT,                          \
+				ZB_ZCL_ARRAY_SIZE(concentration_measurement_attr_list, zb_zcl_attr_t),    \
+				(concentration_measurement_attr_list),                                    \
 				ZB_ZCL_CLUSTER_SERVER_ROLE,                                          \
 				ZB_ZCL_MANUF_CODE_INVALID),                                          \
 			ZB_ZCL_CLUSTER_DESC(                                                     \
@@ -113,6 +121,7 @@
 				ZB_ZCL_CLUSTER_ID_IDENTIFY,                 \
 				ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT,         \
 				ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, \
+				ZB_ZCL_CLUSTER_ID_CONCENTRATION_MEASUREMENT,\
 				ZB_ZCL_CLUSTER_ID_IDENTIFY,                 \
 			}}
 
@@ -141,6 +150,15 @@ struct zb_zcl_humidity_measurement_attrs_t
 	zb_int16_t measure_value;
 	zb_int16_t min_measure_value;
 	zb_int16_t max_measure_value;
+	zb_uint16_t tolerance;
+};
+
+struct zb_zcl_concentration_measurement_attrs_t
+{
+	zb_int16_t measure_value;
+	zb_int16_t min_measure_value;
+	zb_int16_t max_measure_value;
+	zb_uint16_t tolerance;
 };
 
 struct zb_device_ctx
@@ -149,6 +167,7 @@ struct zb_device_ctx
 	zb_zcl_identify_attrs_t identify_attr;
 	zb_zcl_temp_measurement_attrs_t temp_attrs;
 	struct zb_zcl_humidity_measurement_attrs_t humidity_attrs;
+	struct zb_zcl_concentration_measurement_attrs_t concentration_attrs;
 };
 
 /**
@@ -183,5 +202,12 @@ int air_quality_monitor_update_temperature(void);
  * @return 0 if success, error code if failure.
  */
 int air_quality_monitor_update_humidity(void);
+
+/**
+ * @brief Updates ZCL co2 attribute using value obtained during last air quality check.
+ *
+ * @return 0 if success, error code if failure.
+ */
+int air_quality_monitor_update_co2(void);
 
 #endif /* AIR_QUALITY_MONITOR_H */

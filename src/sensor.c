@@ -56,3 +56,20 @@ int sensor_get_humidity(float *humidity)
 
 	return err;
 }
+
+int sensor_get_co2(uint16_t *co2)
+{
+	int err = 0;
+
+	if (co2)
+	{
+		*co2 = 1500;
+	}
+	else
+	{
+		LOG_ERR("NULL param");
+		err = EINVAL;
+	}
+
+	return err;
+}

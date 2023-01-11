@@ -28,7 +28,8 @@ Or you can use this `./.vscode/launch.json` config for Cortex-Debug extension:
             "gdbPath": "${workspaceFolder}/../zephyr-sdk/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
             "interface": "swd",
             "runToEntryPoint": "main",
-            "executable": "${workspaceFolder}/build/zephyr/zephyr.hex",
+            "showDevDebugOutput": "raw",
+            "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
             "preLaunchCommands": [
                 "add-symbol-file ${workspaceFolder}/build/zephyr/zephyr.elf"
               ]

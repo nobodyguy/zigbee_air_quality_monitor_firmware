@@ -104,7 +104,15 @@ ZB_ZCL_DECLARE_REL_HUMIDITY_MEASUREMENT_ATTRIB_LIST(
 	humidity_measurement_attr_list,
 	&dev_ctx.humidity_attrs.measure_value,
 	&dev_ctx.humidity_attrs.min_measure_value,
-	&dev_ctx.humidity_attrs.max_measure_value);
+	&dev_ctx.humidity_attrs.max_measure_value,
+	&dev_ctx.humidity_attrs.tolerance);
+
+ZB_ZCL_DECLARE_CONCENTRATION_MEASUREMENT_ATTRIB_LIST(
+	concentration_measurement_attr_list,
+	&dev_ctx.concentration_attrs.measure_value,
+	&dev_ctx.concentration_attrs.min_measure_value,
+	&dev_ctx.concentration_attrs.max_measure_value,
+	&dev_ctx.concentration_attrs.tolerance);
 
 /* Clusters setup */
 ZB_HA_DECLARE_AIR_QUALITY_MONITOR_CLUSTER_LIST(
@@ -113,7 +121,8 @@ ZB_HA_DECLARE_AIR_QUALITY_MONITOR_CLUSTER_LIST(
 	identify_client_attr_list,
 	identify_server_attr_list,
 	temperature_measurement_attr_list,
-	humidity_measurement_attr_list);
+	humidity_measurement_attr_list,
+	concentration_measurement_attr_list);
 
 /* Endpoint setup (single) */
 ZB_HA_DECLARE_AIR_QUALITY_MONITOR_EP(
@@ -172,7 +181,13 @@ static void measurements_clusters_attr_init(void)
 	dev_ctx.humidity_attrs.measure_value = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_UNKNOWN;
 	dev_ctx.humidity_attrs.min_measure_value = AIR_QUALITY_MONITOR_ATTR_HUMIDITY_MIN;
 	dev_ctx.humidity_attrs.max_measure_value = AIR_QUALITY_MONITOR_ATTR_HUMIDITY_MAX;
-	/* Humidity measurements tolerance is not supported at the moment */
+	dev_ctx.humidity_attrs.tolerance = AIR_QUALITY_MONITOR_ATTR_HUMIDITY_TOLERANCE;
+
+	/* CO2 */
+	dev_ctx.concentration_attrs.measure_value = ZB_ZCL_ATTR_CONCENTRATION_MEASUREMENT_VALUE_UNKNOWN;
+	dev_ctx.concentration_attrs.min_measure_value = ZB_ZCL_CONCENTRATION_MEASUREMENT_MIN_VALUE_DEFAULT_VALUE;
+	dev_ctx.concentration_attrs.max_measure_value = ZB_ZCL_CONCENTRATION_MEASUREMENT_MAX_VALUE_DEFAULT_VALUE; // 10 000ppm
+	dev_ctx.concentration_attrs.tolerance = 0.0001f; // 100 ppm
 }
 
 static void toggle_identify_led(zb_bufid_t bufid)
@@ -362,6 +377,12 @@ static void check_air_quality(zb_bufid_t bufid)
 		{
 			LOG_ERR("Failed to update humidity: %d", err);
 		}
+
+		err = air_quality_monitor_update_co2();
+		if (err)
+		{
+			LOG_ERR("Failed to update co2: %d", err);
+		}
 	}
 
 	zb_ret_t zb_err = ZB_SCHEDULE_APP_ALARM(check_air_quality,
@@ -420,7 +441,7 @@ void main(void)
 {
 	gpio_init();
 #ifdef CONFIG_USB_DEVICE_STACK
-	//wait_for_console();
+	wait_for_console();
 #endif /* CONFIG_USB_DEVICE_STACK */
 
 	air_quality_monitor_init();

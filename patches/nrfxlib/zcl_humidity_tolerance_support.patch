@@ -1,0 +1,55 @@
+diff --git a/zboss/production/include/zcl/zb_zcl_rel_humidity_measurement.h b/zboss/production/include/zcl/zb_zcl_rel_humidity_measurement.h
+index e853ce69..48eea913 100644
+--- a/zboss/production/include/zcl/zb_zcl_rel_humidity_measurement.h
++++ b/zboss/production/include/zcl/zb_zcl_rel_humidity_measurement.h
+@@ -75,7 +75,7 @@ enum zb_zcl_rel_humidity_measurement_attr_e
+    *  the same units and resolution.
+    *  @brief Tolerance, ZCL specification revision 7 subsection 4.7.2.1.4 Tolerance Attribute
+    */
+-  ZB_ZCL_ATTR_REL_HUMIDITY_TOLERANCE_ID             = 0x0003,
++  ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_ID             = 0x0003,
+ };
+ 
+ /** @brief Default value for Water Content Measurement cluster revision global attribute */
+@@ -111,6 +111,12 @@ enum zb_zcl_rel_humidity_measurement_attr_e
+ /** @brief Default value for MeasurementMaxValue attribute */
+ #define ZB_ZCL_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_DEFAULT_VALUE ((zb_uint16_t)0xFFFF)
+ 
++/** @brief Tolerance attribute minimum value */
++#define ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_MIN_VALUE            0x0000
++
++/** @brief Tolerance attribute maximum value */
++#define ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_MAX_VALUE            0x0800
++
+ /** @cond internals_doc */
+ /*! @internal @name Relative Humidity Measurement cluster internals
+     Internal structures for attribute representation in cluster definitions.
+@@ -141,6 +147,14 @@ enum zb_zcl_rel_humidity_measurement_attr_e
+   (void*) data_ptr                                 \
+ }
+ 
++#define ZB_SET_ATTR_DESCR_WITH_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_ID(data_ptr) \
++{                                                       \
++  ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_ID,    \
++  ZB_ZCL_ATTR_TYPE_U16,                                 \
++  ZB_ZCL_ATTR_ACCESS_READ_ONLY | ZB_ZCL_ATTR_ACCESS_REPORTING,                         \
++  (void*) data_ptr                                 \
++}
++
+ #define ZB_ZCL_REL_HUMIDITY_MEASUREMENT_REPORT_ATTR_COUNT 1
+ 
+ /*! @} */ /* Relative Humidity Measurement cluster internals */
+@@ -154,11 +168,12 @@ enum zb_zcl_rel_humidity_measurement_attr_e
+     @param max_value - pointer to variable to store MAxMeasuredValue attribute
+ */
+ #define ZB_ZCL_DECLARE_REL_HUMIDITY_MEASUREMENT_ATTRIB_LIST(attr_list,          \
+-    value, min_value, max_value)                                                \
++    value, min_value, max_value, tolerance)                                                \
+   ZB_ZCL_START_DECLARE_ATTRIB_LIST_CLUSTER_REVISION(attr_list, ZB_ZCL_WATER_CONTENT_MEASUREMENT) \
+   ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, (value))          \
+   ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, (min_value))  \
+   ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, (max_value))  \
++  ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_ID, (tolerance))  \
+   ZB_ZCL_FINISH_DECLARE_ATTRIB_LIST
+ 
+ /*! @} */ /* Relative Humidity Measurement cluster attributes */

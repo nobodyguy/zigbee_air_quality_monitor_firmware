@@ -106,3 +106,37 @@ int air_quality_monitor_update_humidity(void)
 
 	return err;
 }
+
+int air_quality_monitor_update_co2(void)
+{
+	int err = 0;
+
+	uint16_t measured_co2 = 0;
+	float co2_attribute = 0.0;
+
+	err = sensor_get_co2(&measured_co2);
+	if (err)
+	{
+		LOG_ERR("Failed to get sensor co2: %d", err);
+	}
+	else
+	{
+		co2_attribute = 0.0015;
+		LOG_INF("Attribute CO2:%10f", co2_attribute);
+
+		zb_zcl_status_t status = zb_zcl_set_attr_val(
+			AIR_QUALITY_MONITOR_ENDPOINT_NB,
+			ZB_ZCL_CLUSTER_ID_CONCENTRATION_MEASUREMENT,
+			ZB_ZCL_CLUSTER_SERVER_ROLE,
+			ZB_ZCL_ATTR_CONCENTRATION_MEASUREMENT_VALUE_ID,
+			(zb_uint8_t *)&co2_attribute,
+			ZB_FALSE);
+		if (status)
+		{
+			LOG_ERR("Failed to set ZCL attribute: %d", status);
+			err = status;
+		}
+	}
+
+	return err;
+}

@@ -29,4 +29,5 @@ target_sources(app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/sensor.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/air_quality_monitor.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/zcl/zb_zcl_concentration_measurement.c
 )

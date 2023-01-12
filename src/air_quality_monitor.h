@@ -12,12 +12,12 @@
 #include <zcl/zb_zcl_basic_addons.h>
 
 #include "zcl/zb_zcl_concentration_measurement.h"
-#include "sensor.h"
 
 /* Zigbee Cluster Library 4.4.2.2.1.1: MeasuredValue = 100x temperature in degrees Celsius */
 #define ZCL_TEMPERATURE_MEASUREMENT_MEASURED_VALUE_MULTIPLIER 100
 /* Zigbee Cluster Library 4.7.2.1.1: MeasuredValue = 100x water content in % */
 #define ZCL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_MULTIPLIER 100
+#define ZCL_CO2_MEASUREMENT_MEASURED_VALUE_MULTIPLIER 0.000001
 
 /* Measurements ranges scaled for attribute values */
 #define AIR_QUALITY_MONITOR_ATTR_TEMP_MIN ( \
@@ -175,9 +175,9 @@ struct zb_device_ctx
  *
  * @note Has to be called before other functions can be used.
  *
- * @return 0 if success, error code if failure.
+ * @return void
  */
-int air_quality_monitor_init(void);
+void air_quality_monitor_init(void);
 
 /**
  * @brief Updates internal measurements performed by sensor.

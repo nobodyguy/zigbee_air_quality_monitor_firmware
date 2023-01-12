@@ -5,6 +5,22 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
+ &i2c1 {
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+	scd4x@62 {
+		status = "okay";
+		compatible = "sensirion,scd4x";
+		reg = <0x62>;
+		label = "SCD4X";
+        model = "scd41";
+        altitude = <0>;
+        measure-mode = "normal";
+        temperature-offset = <4>;
+		auto-calibration;
+	};
+};
+
 /* Disable unused peripherals to reduce power consumption */
 &pwm0 {
 	status = "disabled";

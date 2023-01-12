@@ -34,10 +34,6 @@
  */
 #define ZIGBEE_DATE_CODE "20230107"
 
-/* Delay for console initialization */
-#define WAIT_FOR_CONSOLE_MSEC 100
-#define WAIT_FOR_CONSOLE_DEADLINE_MSEC 2000
-
 /* Air quality check period */
 #define AIR_QUALITY_CHECK_PERIOD_MSEC (1000 * CONFIG_AIR_MONITOR_CHECK_PERIOD_SECONDS)
 
@@ -61,79 +57,61 @@ static const struct gpio_dt_spec led_blue = GPIO_DT_SPEC_GET(LED2_NODE, gpios);
 /* LED used for device identification */
 #define IDENTIFY_LED led_red
 
-BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console),
-								zephyr_cdc_acm_uart),
-			 "Console device is not ACM CDC UART device");
+BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
+	     "Console device is not ACM CDC UART device");
 LOG_MODULE_REGISTER(app, CONFIG_ZIGBEE_AIR_QUALITY_MONITOR_LOG_LEVEL);
 
 /* Stores all cluster-related attributes */
 static struct zb_device_ctx dev_ctx;
 
 /* Attributes setup */
-ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST_EXT(
-	basic_attr_list,
-	&dev_ctx.basic_attr.zcl_version,
-	&dev_ctx.basic_attr.app_version,
-	&dev_ctx.basic_attr.stack_version,
-	&dev_ctx.basic_attr.hw_version,
-	dev_ctx.basic_attr.mf_name,
-	dev_ctx.basic_attr.model_id,
-	dev_ctx.basic_attr.date_code,
-	&dev_ctx.basic_attr.power_source,
-	dev_ctx.basic_attr.location_id,
-	&dev_ctx.basic_attr.ph_env,
-	dev_ctx.basic_attr.sw_ver);
+ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST_EXT(basic_attr_list, &dev_ctx.basic_attr.zcl_version,
+				     &dev_ctx.basic_attr.app_version,
+				     &dev_ctx.basic_attr.stack_version,
+				     &dev_ctx.basic_attr.hw_version, dev_ctx.basic_attr.mf_name,
+				     dev_ctx.basic_attr.model_id, dev_ctx.basic_attr.date_code,
+				     &dev_ctx.basic_attr.power_source,
+				     dev_ctx.basic_attr.location_id, &dev_ctx.basic_attr.ph_env,
+				     dev_ctx.basic_attr.sw_ver);
 
 /* Declare attribute list for Identify cluster (client). */
-ZB_ZCL_DECLARE_IDENTIFY_CLIENT_ATTRIB_LIST(
-	identify_client_attr_list);
+ZB_ZCL_DECLARE_IDENTIFY_CLIENT_ATTRIB_LIST(identify_client_attr_list);
 
 /* Declare attribute list for Identify cluster (server). */
-ZB_ZCL_DECLARE_IDENTIFY_SERVER_ATTRIB_LIST(
-	identify_server_attr_list,
-	&dev_ctx.identify_attr.identify_time);
+ZB_ZCL_DECLARE_IDENTIFY_SERVER_ATTRIB_LIST(identify_server_attr_list,
+					   &dev_ctx.identify_attr.identify_time);
 
-ZB_ZCL_DECLARE_TEMP_MEASUREMENT_ATTRIB_LIST(
-	temperature_measurement_attr_list,
-	&dev_ctx.temp_attrs.measure_value,
-	&dev_ctx.temp_attrs.min_measure_value,
-	&dev_ctx.temp_attrs.max_measure_value,
-	&dev_ctx.temp_attrs.tolerance);
+ZB_ZCL_DECLARE_TEMP_MEASUREMENT_ATTRIB_LIST(temperature_measurement_attr_list,
+					    &dev_ctx.temp_attrs.measure_value,
+					    &dev_ctx.temp_attrs.min_measure_value,
+					    &dev_ctx.temp_attrs.max_measure_value,
+					    &dev_ctx.temp_attrs.tolerance);
 
-ZB_ZCL_DECLARE_REL_HUMIDITY_MEASUREMENT_ATTRIB_LIST(
-	humidity_measurement_attr_list,
-	&dev_ctx.humidity_attrs.measure_value,
-	&dev_ctx.humidity_attrs.min_measure_value,
-	&dev_ctx.humidity_attrs.max_measure_value,
-	&dev_ctx.humidity_attrs.tolerance);
+ZB_ZCL_DECLARE_REL_HUMIDITY_MEASUREMENT_ATTRIB_LIST(humidity_measurement_attr_list,
+						    &dev_ctx.humidity_attrs.measure_value,
+						    &dev_ctx.humidity_attrs.min_measure_value,
+						    &dev_ctx.humidity_attrs.max_measure_value,
+						    &dev_ctx.humidity_attrs.tolerance);
 
-ZB_ZCL_DECLARE_CONCENTRATION_MEASUREMENT_ATTRIB_LIST(
-	concentration_measurement_attr_list,
-	&dev_ctx.concentration_attrs.measure_value,
-	&dev_ctx.concentration_attrs.min_measure_value,
-	&dev_ctx.concentration_attrs.max_measure_value,
-	&dev_ctx.concentration_attrs.tolerance);
+ZB_ZCL_DECLARE_CONCENTRATION_MEASUREMENT_ATTRIB_LIST(concentration_measurement_attr_list,
+						     &dev_ctx.concentration_attrs.measure_value,
+						     &dev_ctx.concentration_attrs.min_measure_value,
+						     &dev_ctx.concentration_attrs.max_measure_value,
+						     &dev_ctx.concentration_attrs.tolerance);
 
 /* Clusters setup */
-ZB_HA_DECLARE_AIR_QUALITY_MONITOR_CLUSTER_LIST(
-	air_quality_monitor_cluster_list,
-	basic_attr_list,
-	identify_client_attr_list,
-	identify_server_attr_list,
-	temperature_measurement_attr_list,
-	humidity_measurement_attr_list,
-	concentration_measurement_attr_list);
+ZB_HA_DECLARE_AIR_QUALITY_MONITOR_CLUSTER_LIST(air_quality_monitor_cluster_list, basic_attr_list,
+					       identify_client_attr_list, identify_server_attr_list,
+					       temperature_measurement_attr_list,
+					       humidity_measurement_attr_list,
+					       concentration_measurement_attr_list);
 
 /* Endpoint setup (single) */
-ZB_HA_DECLARE_AIR_QUALITY_MONITOR_EP(
-	air_quality_monitor_ep,
-	AIR_QUALITY_MONITOR_ENDPOINT_NB,
-	air_quality_monitor_cluster_list);
+ZB_HA_DECLARE_AIR_QUALITY_MONITOR_EP(air_quality_monitor_ep, AIR_QUALITY_MONITOR_ENDPOINT_NB,
+				     air_quality_monitor_cluster_list);
 
 /* Device context */
-ZBOSS_DECLARE_DEVICE_CTX_1_EP(
-	air_quality_monitor_ctx,
-	air_quality_monitor_ep);
+ZBOSS_DECLARE_DEVICE_CTX_1_EP(air_quality_monitor_ctx, air_quality_monitor_ep);
 
 static void mandatory_clusters_attr_init(void)
 {
@@ -150,20 +128,14 @@ static void mandatory_clusters_attr_init(void)
 	 * For example "test" string will be encoded as:
 	 *   [(0x4), 't', 'e', 's', 't']
 	 */
-	ZB_ZCL_SET_STRING_VAL(
-		dev_ctx.basic_attr.mf_name,
-		ZIGBEE_MANUF_NAME,
-		ZB_ZCL_STRING_CONST_SIZE(ZIGBEE_MANUF_NAME));
+	ZB_ZCL_SET_STRING_VAL(dev_ctx.basic_attr.mf_name, ZIGBEE_MANUF_NAME,
+			      ZB_ZCL_STRING_CONST_SIZE(ZIGBEE_MANUF_NAME));
 
-	ZB_ZCL_SET_STRING_VAL(
-		dev_ctx.basic_attr.model_id,
-		ZIGBEE_MODEL_ID,
-		ZB_ZCL_STRING_CONST_SIZE(ZIGBEE_MODEL_ID));
+	ZB_ZCL_SET_STRING_VAL(dev_ctx.basic_attr.model_id, ZIGBEE_MODEL_ID,
+			      ZB_ZCL_STRING_CONST_SIZE(ZIGBEE_MODEL_ID));
 
-	ZB_ZCL_SET_STRING_VAL(
-		dev_ctx.basic_attr.date_code,
-		ZIGBEE_DATE_CODE,
-		ZB_ZCL_STRING_CONST_SIZE(ZIGBEE_DATE_CODE));
+	ZB_ZCL_SET_STRING_VAL(dev_ctx.basic_attr.date_code, ZIGBEE_DATE_CODE,
+			      ZB_ZCL_STRING_CONST_SIZE(ZIGBEE_DATE_CODE));
 
 	/* Identify cluster attributes */
 	dev_ctx.identify_attr.identify_time = ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE;
@@ -173,32 +145,35 @@ static void measurements_clusters_attr_init(void)
 {
 	/* Temperature */
 	dev_ctx.temp_attrs.measure_value = ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_UNKNOWN;
-	dev_ctx.temp_attrs.min_measure_value = AIR_QUALITY_MONITOR_ATTR_TEMP_MIN;
-	dev_ctx.temp_attrs.max_measure_value = AIR_QUALITY_MONITOR_ATTR_TEMP_MAX;
-	dev_ctx.temp_attrs.tolerance = AIR_QUALITY_MONITOR_ATTR_TEMP_TOLERANCE;
+	dev_ctx.temp_attrs.min_measure_value = ZB_ZCL_TEMP_MEASUREMENT_MIN_VALUE_DEFAULT_VALUE;
+	dev_ctx.temp_attrs.max_measure_value = ZB_ZCL_TEMP_MEASUREMENT_MAX_VALUE_DEFAULT_VALUE;
+	dev_ctx.temp_attrs.tolerance = ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_MAX_VALUE;
 
 	/* Humidity */
 	dev_ctx.humidity_attrs.measure_value = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_UNKNOWN;
-	dev_ctx.humidity_attrs.min_measure_value = AIR_QUALITY_MONITOR_ATTR_HUMIDITY_MIN;
-	dev_ctx.humidity_attrs.max_measure_value = AIR_QUALITY_MONITOR_ATTR_HUMIDITY_MAX;
-	dev_ctx.humidity_attrs.tolerance = AIR_QUALITY_MONITOR_ATTR_HUMIDITY_TOLERANCE;
+	dev_ctx.humidity_attrs.min_measure_value =
+		ZB_ZCL_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_DEFAULT_VALUE;
+	dev_ctx.humidity_attrs.max_measure_value =
+		ZB_ZCL_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_DEFAULT_VALUE;
+	dev_ctx.humidity_attrs.tolerance = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_MAX_VALUE;
 
 	/* CO2 */
-	dev_ctx.concentration_attrs.measure_value = ZB_ZCL_ATTR_CONCENTRATION_MEASUREMENT_VALUE_UNKNOWN;
-	dev_ctx.concentration_attrs.min_measure_value = ZB_ZCL_CONCENTRATION_MEASUREMENT_MIN_VALUE_DEFAULT_VALUE;
-	dev_ctx.concentration_attrs.max_measure_value = ZB_ZCL_CONCENTRATION_MEASUREMENT_MAX_VALUE_DEFAULT_VALUE; // 10 000ppm
+	dev_ctx.concentration_attrs.measure_value =
+		ZB_ZCL_ATTR_CONCENTRATION_MEASUREMENT_VALUE_UNKNOWN;
+	dev_ctx.concentration_attrs.min_measure_value =
+		ZB_ZCL_CONCENTRATION_MEASUREMENT_MIN_VALUE_DEFAULT_VALUE;
+	dev_ctx.concentration_attrs.max_measure_value =
+		ZB_ZCL_CONCENTRATION_MEASUREMENT_MAX_VALUE_DEFAULT_VALUE; // 10 000ppm
 	dev_ctx.concentration_attrs.tolerance = 0.0001f; // 100 ppm
 }
 
 static void toggle_identify_led(zb_bufid_t bufid)
 {
 	gpio_pin_toggle_dt(&IDENTIFY_LED);
-	zb_ret_t err = ZB_SCHEDULE_APP_ALARM(toggle_identify_led,
-										 bufid,
-										 ZB_MILLISECONDS_TO_BEACON_INTERVAL(
-											 IDENTIFY_LED_BLINK_TIME_MSEC));
-	if (err)
-	{
+	zb_ret_t err = ZB_SCHEDULE_APP_ALARM(
+		toggle_identify_led, bufid,
+		ZB_MILLISECONDS_TO_BEACON_INTERVAL(IDENTIFY_LED_BLINK_TIME_MSEC));
+	if (err) {
 		LOG_ERR("Failed to schedule app alarm: %d", err);
 	}
 }
@@ -207,40 +182,28 @@ static void start_identifying(zb_bufid_t bufid)
 {
 	ZVUNUSED(bufid);
 
-	if (ZB_JOINED())
-	{
+	if (ZB_JOINED()) {
 		/*
 		 * Check if endpoint is in identifying mode,
 		 * if not put desired endpoint in identifying mode.
 		 */
 		if (dev_ctx.identify_attr.identify_time ==
-			ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE)
-		{
+		    ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE) {
+			zb_ret_t zb_err_code =
+				zb_bdb_finding_binding_target(AIR_QUALITY_MONITOR_ENDPOINT_NB);
 
-			zb_ret_t zb_err_code = zb_bdb_finding_binding_target(
-				AIR_QUALITY_MONITOR_ENDPOINT_NB);
-
-			if (zb_err_code == RET_OK)
-			{
+			if (zb_err_code == RET_OK) {
 				LOG_INF("Manually enter identify mode");
-			}
-			else if (zb_err_code == RET_INVALID_STATE)
-			{
+			} else if (zb_err_code == RET_INVALID_STATE) {
 				LOG_WRN("RET_INVALID_STATE - Cannot enter identify mode");
-			}
-			else
-			{
+			} else {
 				ZB_ERROR_CHECK(zb_err_code);
 			}
-		}
-		else
-		{
+		} else {
 			LOG_INF("Manually cancel identify mode");
 			zb_bdb_finding_binding_target_cancel();
 		}
-	}
-	else
-	{
+	} else {
 		LOG_WRN("Device not in a network - cannot identify itself");
 	}
 }
@@ -249,30 +212,20 @@ static void identify_callback(zb_bufid_t bufid)
 {
 	zb_ret_t err = RET_OK;
 
-	if (bufid)
-	{
+	if (bufid) {
 		/* Schedule a self-scheduling function that will toggle the LED */
 		err = ZB_SCHEDULE_APP_CALLBACK(toggle_identify_led, bufid);
-		if (err)
-		{
+		if (err) {
 			LOG_ERR("Failed to schedule app callback: %d", err);
-		}
-		else
-		{
+		} else {
 			LOG_INF("Enter identify mode");
 		}
-	}
-	else
-	{
+	} else {
 		/* Cancel the toggling function alarm and turn off LED */
-		err = ZB_SCHEDULE_APP_ALARM_CANCEL(toggle_identify_led,
-										   ZB_ALARM_ANY_PARAM);
-		if (err)
-		{
+		err = ZB_SCHEDULE_APP_ALARM_CANCEL(toggle_identify_led, ZB_ALARM_ANY_PARAM);
+		if (err) {
 			LOG_ERR("Failed to schedule app alarm cancel: %d", err);
-		}
-		else
-		{
+		} else {
 			gpio_pin_toggle_dt(&IDENTIFY_LED);
 			LOG_INF("Cancel identify mode");
 		}
@@ -282,77 +235,39 @@ static void identify_callback(zb_bufid_t bufid)
 static void gpio_init(void)
 {
 	int ret;
-	if (device_is_ready(led_red.port))
-	{
+	if (device_is_ready(led_red.port)) {
 		ret = gpio_pin_configure_dt(&led_red, GPIO_OUTPUT_ACTIVE);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			LOG_ERR("Failed to initialize red LED");
 			return;
 		}
-	}
-	else
-	{
+	} else {
 		LOG_ERR("Failed to initialize red LED");
 		return;
 	}
 
-	if (device_is_ready(led_green.port))
-	{
+	if (device_is_ready(led_green.port)) {
 		ret = gpio_pin_configure_dt(&led_green, GPIO_OUTPUT_ACTIVE);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			LOG_ERR("Failed to initialize green LED");
 			return;
 		}
-	}
-	else
-	{
+	} else {
 		LOG_ERR("Failed to initialize green LED");
 		return;
 	}
 
-	if (device_is_ready(led_blue.port))
-	{
+	if (device_is_ready(led_blue.port)) {
 		ret = gpio_pin_configure_dt(&led_blue, GPIO_OUTPUT_ACTIVE);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			LOG_ERR("Failed to initialize blue LED");
 			return;
 		}
-	}
-	else
-	{
+	} else {
 		LOG_ERR("Failed to initialize blue LED");
 		return;
 	}
 }
-
-#ifdef CONFIG_USB_DEVICE_STACK
-static void wait_for_console(void)
-{
-	const struct device *console = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
-	uint32_t dtr = 0;
-	uint32_t time = 0;
-
-	/* Enable the USB subsystem and associated HW */
-	if (usb_enable(NULL))
-	{
-		LOG_ERR("Failed to enable USB");
-	}
-	else
-	{
-		/* Wait for DTR flag or deadline (e.g. when USB is not connected) */
-		while (!dtr && time < WAIT_FOR_CONSOLE_DEADLINE_MSEC)
-		{
-			uart_line_ctrl_get(console, UART_LINE_CTRL_DTR, &dtr);
-			/* Give CPU resources to low priority threads */
-			k_sleep(K_MSEC(WAIT_FOR_CONSOLE_MSEC));
-			time += WAIT_FOR_CONSOLE_MSEC;
-		}
-	}
-}
-#endif /* CONFIG_USB_DEVICE_STACK */
 
 static void check_air_quality(zb_bufid_t bufid)
 {
@@ -360,37 +275,29 @@ static void check_air_quality(zb_bufid_t bufid)
 
 	int err = air_quality_monitor_check_air_quality();
 
-	if (err)
-	{
+	if (err) {
 		LOG_ERR("Failed to check air quality: %d", err);
-	}
-	else
-	{
+	} else {
 		err = air_quality_monitor_update_temperature();
-		if (err)
-		{
+		if (err) {
 			LOG_ERR("Failed to update temperature: %d", err);
 		}
 
 		err = air_quality_monitor_update_humidity();
-		if (err)
-		{
+		if (err) {
 			LOG_ERR("Failed to update humidity: %d", err);
 		}
 
 		err = air_quality_monitor_update_co2();
-		if (err)
-		{
+		if (err) {
 			LOG_ERR("Failed to update co2: %d", err);
 		}
 	}
 
-	zb_ret_t zb_err = ZB_SCHEDULE_APP_ALARM(check_air_quality,
-											0,
-											ZB_MILLISECONDS_TO_BEACON_INTERVAL(
-												AIR_QUALITY_CHECK_PERIOD_MSEC));
-	if (zb_err)
-	{
+	zb_ret_t zb_err = ZB_SCHEDULE_APP_ALARM(
+		check_air_quality, 0,
+		ZB_MILLISECONDS_TO_BEACON_INTERVAL(AIR_QUALITY_CHECK_PERIOD_MSEC));
+	if (zb_err) {
 		LOG_ERR("Failed to schedule app alarm: %d", zb_err);
 	}
 }
@@ -407,16 +314,13 @@ void zboss_signal_handler(zb_bufid_t bufid)
 #endif /* CONFIG_LOG */
 
 	/* Detect ZBOSS startup */
-	switch (signal)
-	{
+	switch (signal) {
 	case ZB_ZDO_SIGNAL_SKIP_STARTUP:
 		/* ZBOSS framework has started - schedule first air quality check */
-		err = ZB_SCHEDULE_APP_ALARM(check_air_quality,
-									0,
-									ZB_MILLISECONDS_TO_BEACON_INTERVAL(
-										AIR_QUALITY_CHECK_INITIAL_DELAY_MSEC));
-		if (err)
-		{
+		err = ZB_SCHEDULE_APP_ALARM(
+			check_air_quality, 0,
+			ZB_MILLISECONDS_TO_BEACON_INTERVAL(AIR_QUALITY_CHECK_INITIAL_DELAY_MSEC));
+		if (err) {
 			LOG_ERR("Failed to schedule app alarm: %d", err);
 		}
 		break;
@@ -431,8 +335,7 @@ void zboss_signal_handler(zb_bufid_t bufid)
 	 * All callbacks should either reuse or free passed buffers.
 	 * If bufid == 0, the buffer is invalid (not passed).
 	 */
-	if (bufid)
-	{
+	if (bufid) {
 		zb_buf_free(bufid);
 	}
 }
@@ -440,9 +343,6 @@ void zboss_signal_handler(zb_bufid_t bufid)
 void main(void)
 {
 	gpio_init();
-#ifdef CONFIG_USB_DEVICE_STACK
-	wait_for_console();
-#endif /* CONFIG_USB_DEVICE_STACK */
 
 	air_quality_monitor_init();
 
@@ -460,8 +360,7 @@ void main(void)
 
 	/* Enable Sleepy End Device behavior */
 	zb_set_rx_on_when_idle(ZB_FALSE);
-	if (IS_ENABLED(CONFIG_RAM_POWER_DOWN_LIBRARY))
-	{
+	if (IS_ENABLED(CONFIG_RAM_POWER_DOWN_LIBRARY)) {
 		power_down_unused_ram();
 	}
 
@@ -471,8 +370,7 @@ void main(void)
 	/* Start identification mode */
 	zb_ret_t err = ZB_SCHEDULE_APP_CALLBACK(start_identifying, 0);
 
-	if (err)
-	{
+	if (err) {
 		LOG_ERR("Failed to schedule app callback: %d", err);
 	}
 }

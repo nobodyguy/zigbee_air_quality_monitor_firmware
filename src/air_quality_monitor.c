@@ -8,7 +8,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
-#include <zephyr/drivers/sensor/scd4x.h>
+#include <sensor/scd4x/scd4x.h>
 
 #include "air_quality_monitor.h"
 

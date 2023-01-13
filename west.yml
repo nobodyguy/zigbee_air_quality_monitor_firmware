@@ -1,0 +1,12 @@
+manifest:
+  projects:
+    - name: nrf
+      url: https://github.com/nrfconnect/sdk-nrf.git
+      revision: refs/tags/v2.2.0
+      import: true
+    - name: sensirion_drivers
+      path: modules/sensirion_drivers
+      url: https://github.com/nobodyguy/sensirion_zephyr_drivers.git
+      revision: main
+self:
+    path: project

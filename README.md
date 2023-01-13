@@ -2,6 +2,15 @@
 Opensource HA compatible air quality monitor with CO2, temperature and humidity measurements.\
 Based on **nRF Connect SDK v2.2.99**.
 
+## Init west workspace
+```bash
+cd /workdir
+ZEPHYR_BASE="" west init -l /workdir/project/
+west update
+cd ./project
+./apply_patches.sh
+```
+
 ## Building
 `west build -b xiao_ble`
 

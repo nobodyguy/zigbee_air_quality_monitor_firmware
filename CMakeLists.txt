@@ -7,6 +7,9 @@
 
 cmake_minimum_required(VERSION 3.20.0)
 
+if ("${BOARD}" STREQUAL "zigbee")
+  set(BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR})
+endif()
 
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/configuration/${BOARD}")
   message(FATAL_ERROR

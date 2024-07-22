@@ -10,11 +10,11 @@ const ea = exposes.access;
 const definition = {
     zigbeeModel: ["AirQualityMonitor_v1.0"],
     model: "AirQualityMonitor_v1.0",
-    vendor: "Custom devices (DiY)",
+    vendor: "DIY",
     description: "Air quality monitor (https://github.com/nobodyguy/zigbee_air_quality_monitor_firmware)",
     fromZigbee: [fz.temperature, fz.humidity, fz.co2],
     toZigbee: [], // Should be empty, unless device can be controlled (e.g. lights, switches).
-    exposes: [e.temperature(), e.humidity(), e.co2()],
+    exposes: [e.identify(), e.temperature(), e.humidity(), e.co2()],
     configure: async (device, coordinatorEndpoint, logger) => {
         const endpointID = 1;
         const endpoint = device.getEndpoint(endpointID);

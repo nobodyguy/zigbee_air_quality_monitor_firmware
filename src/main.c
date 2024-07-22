@@ -32,7 +32,7 @@
 /* First 8 bytes specify the date of manufacturer of the device
  * in ISO 8601 format (YYYYMMDD). The rest (8 bytes) are manufacturer specific.
  */
-#define ZIGBEE_DATE_CODE "20230107"
+#define ZIGBEE_DATE_CODE "20240722"
 
 /* Air quality check period */
 #define AIR_QUALITY_CHECK_PERIOD_MSEC (1000 * CONFIG_AIR_MONITOR_CHECK_PERIOD_SECONDS)
@@ -43,19 +43,13 @@
 /* Time of LED on state while blinking for identify mode */
 #define IDENTIFY_LED_BLINK_TIME_MSEC 500
 
-/* Each LED is a RGB component of a single LED */
-#define LED0_NODE DT_ALIAS(led0)
-#define LED1_NODE DT_ALIAS(led1)
-#define LED2_NODE DT_ALIAS(led2)
-static const struct gpio_dt_spec led_red = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
-static const struct gpio_dt_spec led_green = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
-static const struct gpio_dt_spec led_blue = GPIO_DT_SPEC_GET(LED2_NODE, gpios);
-
 /* LED indicating that device successfully joined Zigbee network */
-#define ZIGBEE_NETWORK_STATE_LED led_blue
+static const struct gpio_dt_spec statusLed = GPIO_DT_SPEC_GET(DT_ALIAS(status_led), gpios);
+#define ZIGBEE_NETWORK_STATE_LED statusLed
 
 /* LED used for device identification */
-#define IDENTIFY_LED led_red
+static const struct gpio_dt_spec pairingLed = GPIO_DT_SPEC_GET(DT_ALIAS(pair_led), gpios);
+#define IDENTIFY_LED pairingLed
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 	     "Console device is not ACM CDC UART device");
@@ -235,36 +229,25 @@ static void identify_callback(zb_bufid_t bufid)
 static void gpio_init(void)
 {
 	int ret;
-	if (device_is_ready(led_red.port)) {
-		ret = gpio_pin_configure_dt(&led_red, GPIO_OUTPUT_ACTIVE);
+	if (device_is_ready(pairingLed.port)) {
+		ret = gpio_pin_configure_dt(&IDENTIFY_LED, GPIO_OUTPUT_ACTIVE);
 		if (ret < 0) {
-			LOG_ERR("Failed to initialize red LED");
+			LOG_ERR("Failed to initialize IDENTIFY_LED");
 			return;
 		}
 	} else {
-		LOG_ERR("Failed to initialize red LED");
+		LOG_ERR("Failed to initialize IDENTIFY_LED");
 		return;
 	}
 
-	if (device_is_ready(led_green.port)) {
-		ret = gpio_pin_configure_dt(&led_green, GPIO_OUTPUT_ACTIVE);
+	if (device_is_ready(statusLed.port)) {
+		ret = gpio_pin_configure_dt(&ZIGBEE_NETWORK_STATE_LED, GPIO_OUTPUT_ACTIVE);
 		if (ret < 0) {
-			LOG_ERR("Failed to initialize green LED");
+			LOG_ERR("Failed to initialize ZIGBEE_NETWORK_STATE_LED");
 			return;
 		}
 	} else {
-		LOG_ERR("Failed to initialize green LED");
-		return;
-	}
-
-	if (device_is_ready(led_blue.port)) {
-		ret = gpio_pin_configure_dt(&led_blue, GPIO_OUTPUT_ACTIVE);
-		if (ret < 0) {
-			LOG_ERR("Failed to initialize blue LED");
-			return;
-		}
-	} else {
-		LOG_ERR("Failed to initialize blue LED");
+		LOG_ERR("Failed to initialize ZIGBEE_NETWORK_STATE_LED");
 		return;
 	}
 }
@@ -340,8 +323,19 @@ void zboss_signal_handler(zb_bufid_t bufid)
 	}
 }
 
+void main_usb_init()
+{
+	if (usb_enable(NULL) != 0) {
+		LOG_ERR("Failed to enable USB");
+	}
+}
+
 void main(void)
 {
+#if defined(CONFIG_USB_DEVICE_STACK)
+	main_usb_init();
+#endif
+
 	gpio_init();
 
 	air_quality_monitor_init();

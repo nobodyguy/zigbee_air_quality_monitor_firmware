@@ -1,0 +1,8 @@
+# zigbee board configuration
+
+# Copyright (c) 2018 makerdiary.com.
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_ZIGBEE
+	bool "zigbee"
+	depends on SOC_NRF52840_QIAA

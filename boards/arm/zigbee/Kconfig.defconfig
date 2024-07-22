@@ -1,0 +1,14 @@
+# SOC_NRF52840_QIAA board configuration
+
+# Copyright (c) 23 Jan Gnip
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_ZIGBEE
+
+config BOARD
+	default "zigbee"
+
+config BT_CTLR
+	default BT
+
+endif # BOARD_ZIGBEE

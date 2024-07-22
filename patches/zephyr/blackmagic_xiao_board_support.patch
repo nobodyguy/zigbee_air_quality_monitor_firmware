@@ -1,9 +1,0 @@
-diff --git a/boards/arm/xiao_ble/board.cmake b/boards/arm/xiao_ble/board.cmake
-index f5b8d9211c..b6f29eead5 100644
---- a/boards/arm/xiao_ble/board.cmake
-+++ b/boards/arm/xiao_ble/board.cmake
-@@ -7,3 +7,4 @@ include(${ZEPHYR_BASE}/boards/common/nrfjprog.board.cmake)
- include(${ZEPHYR_BASE}/boards/common/jlink.board.cmake)
- include(${ZEPHYR_BASE}/boards/common/pyocd.board.cmake)
- include(${ZEPHYR_BASE}/boards/common/openocd.board.cmake)
-+include(${ZEPHYR_BASE}/boards/common/blackmagicprobe.board.cmake)

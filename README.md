@@ -2,7 +2,14 @@
 Opensource HA compatible air quality monitor with CO2, temperature and humidity measurements.\
 Based on **nRF Connect SDK v2.2.99**.
 
-## Init west workspace
+## Init west workspace (automatic)
+Use nRF Connect for VS Code extension.
+And only apply the patches manually:
+```bash
+./apply_patches.sh
+```
+
+## Init west workspace (manual)
 ```bash
 cd /workdir
 ZEPHYR_BASE="" west init -l /workdir/project/

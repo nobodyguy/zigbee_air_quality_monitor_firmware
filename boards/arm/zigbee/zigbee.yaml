@@ -1,0 +1,18 @@
+identifier: zigbee
+name: zigbee
+type: mcu
+arch: arm
+toolchain:
+    - zephyr
+    - gnuarmemb
+    - xtools
+supported:
+  - adc
+  - i2c
+  - usb_device
+  - usb_cdc
+  - ble
+  - ieee802154
+  - watchdog
+  - counter
+  - pwm

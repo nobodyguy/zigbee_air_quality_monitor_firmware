@@ -35,9 +35,6 @@
 #define AIR_QUALITY_MONITOR_ATTR_HUMIDITY_MAX ( \
 	SENSOR_HUMIDITY_PERCENT_MAX *               \
 	ZCL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_MULTIPLIER)
-#define AIR_QUALITY_MONITOR_ATTR_HUMIDITY_TOLERANCE ( \
-	SENSOR_HUMIDITY_PERCENT_TOLERANCE *               \
-	ZCL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_MULTIPLIER)
 
 /* Number chosen for the single endpoint provided by air quality monitor */
 #define AIR_QUALITY_MONITOR_ENDPOINT_NB 1
@@ -150,7 +147,6 @@ struct zb_zcl_humidity_measurement_attrs_t
 	zb_int16_t measure_value;
 	zb_int16_t min_measure_value;
 	zb_int16_t max_measure_value;
-	zb_uint16_t tolerance;
 };
 
 struct zb_zcl_concentration_measurement_attrs_t

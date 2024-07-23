@@ -21,11 +21,6 @@ CONFIG_CLOCK_CONTROL_NRF_K32SRC_RC_CALIBRATION=y
 
 CONFIG_GPIO_AS_PINRESET=n
 
-# use P0.09 and P0.10 as GPIOs
-CONFIG_NFCT_PINS_AS_GPIOS=y
-
-CONFIG_PINCTRL=y
-
 # Board Kconfig.defconfig enables USB CDC ACM and should disable USB remote
 # wakeup by default. It needs to be disabled here, because the USB nrfx
 # driver always overwrites option from Kconfig mentioned above with the

@@ -1,6 +1,6 @@
 {
-    "name": "Nordic SDK sandbox",
-    "image": "nordicplayground/nrfconnect-sdk:v2.2-branch",
+    "name": "NCS sandbox",
+    "image": "nordicplayground/nrfconnect-sdk:v2.7-branch",
     "settings": {
         "terminal.integrated.shell.linux": "/bin/bash"
     },
@@ -8,11 +8,9 @@
         "ms-vscode.cpptools",
         "mutantdino.resourcemonitor",
         "nick-rudenko.back-n-forth",
-        "ms-vscode.cmake-tools",
         "marus25.cortex-debug",
         "nordic-semiconductor.nrf-devicetree",
         "nordic-semiconductor.nrf-kconfig",
-        "cschlosser.doxdocgen",
         "nordic-semiconductor.nrf-connect"
     ],
     "workspaceMount": "",

@@ -84,8 +84,7 @@ ZB_ZCL_DECLARE_TEMP_MEASUREMENT_ATTRIB_LIST(temperature_measurement_attr_list,
 ZB_ZCL_DECLARE_REL_HUMIDITY_MEASUREMENT_ATTRIB_LIST(humidity_measurement_attr_list,
 						    &dev_ctx.humidity_attrs.measure_value,
 						    &dev_ctx.humidity_attrs.min_measure_value,
-						    &dev_ctx.humidity_attrs.max_measure_value,
-						    &dev_ctx.humidity_attrs.tolerance);
+						    &dev_ctx.humidity_attrs.max_measure_value);
 
 ZB_ZCL_DECLARE_CONCENTRATION_MEASUREMENT_ATTRIB_LIST(concentration_measurement_attr_list,
 						     &dev_ctx.concentration_attrs.measure_value,
@@ -149,7 +148,6 @@ static void measurements_clusters_attr_init(void)
 		ZB_ZCL_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_DEFAULT_VALUE;
 	dev_ctx.humidity_attrs.max_measure_value =
 		ZB_ZCL_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_DEFAULT_VALUE;
-	dev_ctx.humidity_attrs.tolerance = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_MAX_VALUE;
 
 	/* CO2 */
 	dev_ctx.concentration_attrs.measure_value =

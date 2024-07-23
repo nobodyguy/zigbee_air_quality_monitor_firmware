@@ -63,9 +63,13 @@
 
 	aliases {
 		pair-btn = &button0;
+		button0 = &button0;
 		user-btn = &button1;
+		button1 = &button1;
 		pair-led = &led0;
+		led0 = &led0;
 		status-led = &led1;
+		led1 = &led1;
 	};
 
 };
@@ -179,6 +183,10 @@ zephyr_udc0: &usbd {
 
 	cdc_acm_uart0: cdc_acm_uart0 {
 		compatible = "zephyr,cdc-acm-uart";
-		label = "CDC_ACM_0";
 	};
+};
+
+/* use P0.09 and P0.10 as GPIOs */
+&uicr {
+    nfct-pins-as-gpios;
 };

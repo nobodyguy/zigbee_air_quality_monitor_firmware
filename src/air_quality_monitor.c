@@ -55,7 +55,7 @@ int air_quality_monitor_update_temperature(void)
 		temperature_attribute =
 			(int16_t)(measured_temperature *
 				  ZCL_TEMPERATURE_MEASUREMENT_MEASURED_VALUE_MULTIPLIER);
-		LOG_DBG("Attribute T:%10d", temperature_attribute);
+		LOG_INF("Attribute T:%10d", temperature_attribute);
 
 		/* Set ZCL attribute */
 		zb_zcl_status_t status = zb_zcl_set_attr_val(
@@ -87,7 +87,7 @@ int air_quality_monitor_update_humidity(void)
 		/* Convert measured value to attribute value, as specified in ZCL */
 		humidity_attribute = (int16_t)(measured_humidity *
 					       ZCL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_MULTIPLIER);
-		LOG_DBG("Attribute H:%10d", humidity_attribute);
+		LOG_INF("Attribute H:%10d", humidity_attribute);
 
 		zb_zcl_status_t status = zb_zcl_set_attr_val(
 			AIR_QUALITY_MONITOR_ENDPOINT_NB, ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT,
@@ -117,7 +117,7 @@ int air_quality_monitor_update_co2(void)
 	} else {
 		/* Convert measured value to attribute value, as specified in ZCL */
 		co2_attribute = measured_co2 * ZCL_CO2_MEASUREMENT_MEASURED_VALUE_MULTIPLIER;
-		LOG_DBG("Attribute CO2:%10f", co2_attribute);
+		LOG_INF("Attribute CO2:%10f", co2_attribute);
 
 		zb_zcl_status_t status =
 			zb_zcl_set_attr_val(AIR_QUALITY_MONITOR_ENDPOINT_NB,

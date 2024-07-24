@@ -16,11 +16,13 @@
 #include <zephyr/kernel.h>
 #include <zigbee/zigbee_app_utils.h>
 #include <zigbee/zigbee_error_handler.h>
+#include <dk_buttons_and_leds.h>
 
 #ifdef CONFIG_USB_DEVICE_STACK
 #include <zephyr/usb/usb_device.h>
 #endif /* CONFIG_USB_DEVICE_STACK */
 
+#include "zb_range_extender.h"
 #include "air_quality_monitor.h"
 
 /* Manufacturer name (32 bytes). */
@@ -44,12 +46,16 @@
 #define IDENTIFY_LED_BLINK_TIME_MSEC 500
 
 /* LED indicating that device successfully joined Zigbee network */
-static const struct gpio_dt_spec statusLed = GPIO_DT_SPEC_GET(DT_ALIAS(status_led), gpios);
-#define ZIGBEE_NETWORK_STATE_LED statusLed
+#define ZIGBEE_NETWORK_STATE_LED DK_LED2
 
 /* LED used for device identification */
-static const struct gpio_dt_spec pairingLed = GPIO_DT_SPEC_GET(DT_ALIAS(pair_led), gpios);
-#define IDENTIFY_LED pairingLed
+#define IDENTIFY_LED DK_LED1
+
+/* Button used to enter the Identify mode. */
+#define IDENTIFY_MODE_BUTTON DK_BTN1_MSK
+
+/* Button to start Factory Reset */
+#define FACTORY_RESET_BUTTON IDENTIFY_MODE_BUTTON
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 	     "Console device is not ACM CDC UART device");
@@ -161,24 +167,48 @@ static void measurements_clusters_attr_init(void)
 	dev_ctx.concentration_attrs.tolerance = 0.0001f; // 100 ppm
 }
 
+/**@brief Function to toggle the identify LED
+ *
+ * @param  bufid  Unused parameter, required by ZBOSS scheduler API.
+ */
 static void toggle_identify_led(zb_bufid_t bufid)
 {
-	gpio_pin_toggle_dt(&IDENTIFY_LED);
-	zb_ret_t err = ZB_SCHEDULE_APP_ALARM(
-		toggle_identify_led, bufid,
-		ZB_MILLISECONDS_TO_BEACON_INTERVAL(IDENTIFY_LED_BLINK_TIME_MSEC));
-	if (err) {
-		LOG_ERR("Failed to schedule app alarm: %d", err);
+	static int blink_status;
+
+	dk_set_led(IDENTIFY_LED, (++blink_status) % 2);
+	ZB_SCHEDULE_APP_ALARM(toggle_identify_led, bufid, ZB_MILLISECONDS_TO_BEACON_INTERVAL(100));
+}
+
+/**@brief Function to handle identify notification events on the first endpoint.
+ *
+ * @param  bufid  Unused parameter, required by ZBOSS scheduler API.
+ */
+static void identify_cb(zb_bufid_t bufid)
+{
+	zb_ret_t zb_err_code;
+
+	if (bufid) {
+		/* Schedule a self-scheduling function that will toggle the LED */
+		ZB_SCHEDULE_APP_CALLBACK(toggle_identify_led, bufid);
+	} else {
+		/* Cancel the toggling function alarm and turn off LED */
+		zb_err_code = ZB_SCHEDULE_APP_ALARM_CANCEL(toggle_identify_led, ZB_ALARM_ANY_PARAM);
+		ZVUNUSED(zb_err_code);
+
+		dk_set_led(IDENTIFY_LED, 0);
 	}
 }
 
+/**@brief Starts identifying the device.
+ *
+ * @param  bufid  Unused parameter, required by ZBOSS scheduler API.
+ */
 static void start_identifying(zb_bufid_t bufid)
 {
 	ZVUNUSED(bufid);
 
 	if (ZB_JOINED()) {
-		/*
-		 * Check if endpoint is in identifying mode,
+		/* Check if endpoint is in identifying mode,
 		 * if not put desired endpoint in identifying mode.
 		 */
 		if (dev_ctx.identify_attr.identify_time ==
@@ -187,68 +217,62 @@ static void start_identifying(zb_bufid_t bufid)
 				zb_bdb_finding_binding_target(AIR_QUALITY_MONITOR_ENDPOINT_NB);
 
 			if (zb_err_code == RET_OK) {
-				LOG_INF("Manually enter identify mode");
+				LOG_INF("Enter identify mode");
 			} else if (zb_err_code == RET_INVALID_STATE) {
 				LOG_WRN("RET_INVALID_STATE - Cannot enter identify mode");
 			} else {
 				ZB_ERROR_CHECK(zb_err_code);
 			}
 		} else {
-			LOG_INF("Manually cancel identify mode");
+			LOG_INF("Cancel identify mode");
 			zb_bdb_finding_binding_target_cancel();
 		}
 	} else {
-		LOG_WRN("Device not in a network - cannot identify itself");
+		LOG_WRN("Device not in a network - cannot enter identify mode");
 	}
 }
 
-static void identify_callback(zb_bufid_t bufid)
+/**@brief Callback for button events.
+ *
+ * @param[in]   button_state  Bitmask containing buttons state.
+ * @param[in]   has_changed   Bitmask containing buttons
+ *                            that have changed their state.
+ */
+static void button_changed(uint32_t button_state, uint32_t has_changed)
 {
-	zb_ret_t err = RET_OK;
+	if (IDENTIFY_MODE_BUTTON & has_changed) {
+		if (IDENTIFY_MODE_BUTTON & button_state) {
+			/* Button changed its state to pressed */
+		} else {
+			/* Button changed its state to released */
+			if (was_factory_reset_done()) {
+				/* The long press was for Factory Reset */
+				LOG_DBG("After Factory Reset - ignore button release");
+			} else {
+				/* Button released before Factory Reset */
 
-	if (bufid) {
-		/* Schedule a self-scheduling function that will toggle the LED */
-		err = ZB_SCHEDULE_APP_CALLBACK(toggle_identify_led, bufid);
-		if (err) {
-			LOG_ERR("Failed to schedule app callback: %d", err);
-		} else {
-			LOG_INF("Enter identify mode");
-		}
-	} else {
-		/* Cancel the toggling function alarm and turn off LED */
-		err = ZB_SCHEDULE_APP_ALARM_CANCEL(toggle_identify_led, ZB_ALARM_ANY_PARAM);
-		if (err) {
-			LOG_ERR("Failed to schedule app alarm cancel: %d", err);
-		} else {
-			gpio_pin_toggle_dt(&IDENTIFY_LED);
-			LOG_INF("Cancel identify mode");
+				/* Start identification mode */
+				ZB_SCHEDULE_APP_CALLBACK(start_identifying, 0);
+			}
 		}
 	}
+
+	check_factory_reset_button(button_state, has_changed);
 }
 
+/**@brief Function for initializing LEDs and Buttons. */
 static void gpio_init(void)
 {
-	int ret;
-	if (device_is_ready(pairingLed.port)) {
-		ret = gpio_pin_configure_dt(&IDENTIFY_LED, GPIO_OUTPUT_ACTIVE);
-		if (ret < 0) {
-			LOG_ERR("Failed to initialize IDENTIFY_LED");
-			return;
-		}
-	} else {
-		LOG_ERR("Failed to initialize IDENTIFY_LED");
-		return;
+	int err;
+
+	err = dk_buttons_init(button_changed);
+	if (err) {
+		LOG_ERR("Cannot init buttons (err: %d)", err);
 	}
 
-	if (device_is_ready(statusLed.port)) {
-		ret = gpio_pin_configure_dt(&ZIGBEE_NETWORK_STATE_LED, GPIO_OUTPUT_ACTIVE);
-		if (ret < 0) {
-			LOG_ERR("Failed to initialize ZIGBEE_NETWORK_STATE_LED");
-			return;
-		}
-	} else {
-		LOG_ERR("Failed to initialize ZIGBEE_NETWORK_STATE_LED");
-		return;
+	err = dk_leds_init();
+	if (err) {
+		LOG_ERR("Cannot init LEDs (err: %d)", err);
 	}
 }
 
@@ -291,10 +315,7 @@ void zboss_signal_handler(zb_bufid_t bufid)
 	zb_zdo_app_signal_type_t signal = zb_get_app_signal(bufid, &signal_header);
 	zb_ret_t err = RET_OK;
 
-/* Update network status LED but only for debug configuration */
-#ifdef CONFIG_LOG
-	zigbee_led_status_update(bufid, 2);
-#endif /* CONFIG_LOG */
+	zigbee_led_status_update(bufid, ZIGBEE_NETWORK_STATE_LED);
 
 	/* Detect ZBOSS startup */
 	switch (signal) {
@@ -337,6 +358,7 @@ void main(void)
 #endif
 
 	gpio_init();
+	register_factory_reset_button(FACTORY_RESET_BUTTON);
 
 	air_quality_monitor_init();
 
@@ -350,13 +372,15 @@ void main(void)
 	measurements_clusters_attr_init();
 
 	/* Register callback to identify notifications */
-	ZB_AF_SET_IDENTIFY_NOTIFICATION_HANDLER(AIR_QUALITY_MONITOR_ENDPOINT_NB, identify_callback);
+	ZB_AF_SET_IDENTIFY_NOTIFICATION_HANDLER(AIR_QUALITY_MONITOR_ENDPOINT_NB, identify_cb);
 
 	/* Enable Sleepy End Device behavior */
 	zb_set_rx_on_when_idle(ZB_FALSE);
 	if (IS_ENABLED(CONFIG_RAM_POWER_DOWN_LIBRARY)) {
 		power_down_unused_ram();
 	}
+
+	//zb_bdb_set_legacy_device_support(-1);
 
 	/* Start Zigbee stack */
 	zigbee_enable();

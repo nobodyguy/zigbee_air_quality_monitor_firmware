@@ -15,11 +15,7 @@
         "cschlosser.doxdocgen",
         "nordic-semiconductor.nrf-connect"
     ],
-    "workspaceMount": "",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workdir/project,type=bind",
     "workspaceFolder": "/workdir/project",
     "containerUser": "root",
-    "runArgs": [
-        "--volume=${localWorkspaceFolder}:/workdir/project:z",
-        "--userns=keep-id",
-    ]
 }

@@ -3,7 +3,15 @@ manifest:
     - name: nrf
       url: https://github.com/nrfconnect/sdk-nrf.git
       revision: refs/tags/v2.2.0
-      import: true
+      import:
+        # By using name-allowlist we can clone only the modules that are
+        # strictly needed by the application.
+        name-allowlist:
+          - cmsis      # required by the ARM port
+          - hal_nordic # required by the our board (Nordic based)
+          - zephyr
+          - nrfxlib
+          - soc-hwmv1
     - name: sensirion_drivers
       path: modules/sensirion_drivers
       url: https://github.com/nobodyguy/sensirion_zephyr_drivers.git

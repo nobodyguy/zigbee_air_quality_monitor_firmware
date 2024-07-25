@@ -51,11 +51,14 @@
 /* LED used for device identification */
 #define IDENTIFY_LED DK_LED1
 
-/* Button used to enter the Identify mode. */
-#define IDENTIFY_MODE_BUTTON DK_BTN1_MSK
+/* Button used to force SCD4X calibration */
+#define USER_BUTTON DK_BTN2_MSK
+
+/* Button used to start network steering */
+#define PAIRING_BUTTON DK_BTN1_MSK
 
 /* Button to start Factory Reset */
-#define FACTORY_RESET_BUTTON IDENTIFY_MODE_BUTTON
+#define FACTORY_RESET_BUTTON PAIRING_BUTTON
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 	     "Console device is not ACM CDC UART device");
@@ -240,8 +243,8 @@ static void start_identifying(zb_bufid_t bufid)
  */
 static void button_changed(uint32_t button_state, uint32_t has_changed)
 {
-	if (IDENTIFY_MODE_BUTTON & has_changed) {
-		if (IDENTIFY_MODE_BUTTON & button_state) {
+	if (PAIRING_BUTTON & has_changed) {
+		if (PAIRING_BUTTON & button_state) {
 			/* Button changed its state to pressed */
 		} else {
 			/* Button changed its state to released */
@@ -250,10 +253,23 @@ static void button_changed(uint32_t button_state, uint32_t has_changed)
 				LOG_DBG("After Factory Reset - ignore button release");
 			} else {
 				/* Button released before Factory Reset */
-
-				/* Start identification mode */
-				ZB_SCHEDULE_APP_CALLBACK(start_identifying, 0);
+				if (ZB_JOINED()) {
+					/* Start identification mode */
+					ZB_SCHEDULE_APP_CALLBACK(start_identifying, 0);
+				} else {
+					LOG_DBG("Network steering was started");
+					zb_nvram_clear();
+					user_input_indicate();
+				}
 			}
+		}
+	}
+
+	if (USER_BUTTON & has_changed) {
+		if (USER_BUTTON & button_state) {
+			/* Button changed its state to pressed */
+		} else {
+			/* Button changed its state to released */
 		}
 	}
 
@@ -315,7 +331,7 @@ void zboss_signal_handler(zb_bufid_t bufid)
 	zb_zdo_app_signal_type_t signal = zb_get_app_signal(bufid, &signal_header);
 	zb_ret_t err = RET_OK;
 
-	zigbee_led_status_update(bufid, ZIGBEE_NETWORK_STATE_LED);
+	//zigbee_led_status_update(bufid, ZIGBEE_NETWORK_STATE_LED);
 
 	/* Detect ZBOSS startup */
 	switch (signal) {
@@ -384,11 +400,4 @@ void main(void)
 
 	/* Start Zigbee stack */
 	zigbee_enable();
-
-	/* Start identification mode */
-	zb_ret_t err = ZB_SCHEDULE_APP_CALLBACK(start_identifying, 0);
-
-	if (err) {
-		LOG_ERR("Failed to schedule app callback: %d", err);
-	}
 }

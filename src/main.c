@@ -45,8 +45,8 @@
 /* Time of LED on state while blinking for identify mode */
 #define IDENTIFY_LED_BLINK_TIME_MSEC 500
 
-/* LED indicating that device successfully joined Zigbee network */
-#define ZIGBEE_NETWORK_STATE_LED DK_LED2
+/* User LED */
+#define STATUS_LED DK_LED2
 
 /* LED used for device identification */
 #define IDENTIFY_LED DK_LED1
@@ -235,63 +235,6 @@ static void start_identifying(zb_bufid_t bufid)
 	}
 }
 
-/**@brief Callback for button events.
- *
- * @param[in]   button_state  Bitmask containing buttons state.
- * @param[in]   has_changed   Bitmask containing buttons
- *                            that have changed their state.
- */
-static void button_changed(uint32_t button_state, uint32_t has_changed)
-{
-	if (PAIRING_BUTTON & has_changed) {
-		if (PAIRING_BUTTON & button_state) {
-			/* Button changed its state to pressed */
-		} else {
-			/* Button changed its state to released */
-			if (was_factory_reset_done()) {
-				/* The long press was for Factory Reset */
-				LOG_DBG("After Factory Reset - ignore button release");
-			} else {
-				/* Button released before Factory Reset */
-				if (ZB_JOINED()) {
-					/* Start identification mode */
-					ZB_SCHEDULE_APP_CALLBACK(start_identifying, 0);
-				} else {
-					LOG_DBG("Network steering was started");
-					zb_nvram_clear();
-					user_input_indicate();
-				}
-			}
-		}
-	}
-
-	if (USER_BUTTON & has_changed) {
-		if (USER_BUTTON & button_state) {
-			/* Button changed its state to pressed */
-		} else {
-			/* Button changed its state to released */
-		}
-	}
-
-	check_factory_reset_button(button_state, has_changed);
-}
-
-/**@brief Function for initializing LEDs and Buttons. */
-static void gpio_init(void)
-{
-	int err;
-
-	err = dk_buttons_init(button_changed);
-	if (err) {
-		LOG_ERR("Cannot init buttons (err: %d)", err);
-	}
-
-	err = dk_leds_init();
-	if (err) {
-		LOG_ERR("Cannot init LEDs (err: %d)", err);
-	}
-}
-
 static void check_air_quality(zb_bufid_t bufid)
 {
 	ZVUNUSED(bufid);
@@ -325,13 +268,86 @@ static void check_air_quality(zb_bufid_t bufid)
 	}
 }
 
+/**@brief Callback for button events.
+ *
+ * @param[in]   button_state  Bitmask containing buttons state.
+ * @param[in]   has_changed   Bitmask containing buttons
+ *                            that have changed their state.
+ */
+static void button_changed(uint32_t button_state, uint32_t has_changed)
+{
+	if (PAIRING_BUTTON & has_changed) {
+		if (PAIRING_BUTTON & button_state) {
+			/* Button changed its state to pressed */
+		} else {
+			/* Button changed its state to released */
+			if (was_factory_reset_done()) {
+				/* The long press was for Factory Reset */
+				LOG_DBG("After Factory Reset - ignore button release");
+			} else {
+				/* Button released before Factory Reset */
+				if (ZB_JOINED()) {
+					/* Start identification mode */
+					ZB_SCHEDULE_APP_CALLBACK(start_identifying, 0);
+				} else {
+					// TODO fix - this is triggered after startup
+					dk_set_led_on(IDENTIFY_LED);
+					LOG_DBG("Network steering was started");
+					zb_nvram_clear();
+					user_input_indicate();
+				}
+			}
+		}
+	}
+
+	if (USER_BUTTON & has_changed) {
+		if (USER_BUTTON & button_state) {
+			/* Button changed its state to pressed */
+			dk_set_led_on(STATUS_LED);
+		} else {
+			/* Button changed its state to released */
+			zb_ret_t zb_err_code =
+				ZB_SCHEDULE_APP_ALARM_CANCEL(check_air_quality, ZB_ALARM_ANY_PARAM);
+			ZVUNUSED(zb_err_code);
+
+			air_quality_monitor_calibrate();
+			dk_set_led_off(STATUS_LED);
+
+			zb_ret_t zb_err = ZB_SCHEDULE_APP_ALARM(
+				check_air_quality, 0,
+				ZB_MILLISECONDS_TO_BEACON_INTERVAL(AIR_QUALITY_CHECK_PERIOD_MSEC));
+			if (zb_err) {
+				LOG_ERR("Failed to schedule app alarm: %d", zb_err);
+			}
+		}
+	}
+
+	check_factory_reset_button(button_state, has_changed);
+}
+
+/**@brief Function for initializing LEDs and Buttons. */
+static void gpio_init(void)
+{
+	int err;
+
+	err = dk_buttons_init(button_changed);
+	if (err) {
+		LOG_ERR("Cannot init buttons (err: %d)", err);
+	}
+
+	err = dk_leds_init();
+	if (err) {
+		LOG_ERR("Cannot init LEDs (err: %d)", err);
+	}
+}
+
 void zboss_signal_handler(zb_bufid_t bufid)
 {
 	zb_zdo_app_signal_hdr_t *signal_header = NULL;
 	zb_zdo_app_signal_type_t signal = zb_get_app_signal(bufid, &signal_header);
 	zb_ret_t err = RET_OK;
 
-	//zigbee_led_status_update(bufid, ZIGBEE_NETWORK_STATE_LED);
+	//zigbee_led_status_update(bufid, STATUS_LED);
 
 	/* Detect ZBOSS startup */
 	switch (signal) {
@@ -343,6 +359,9 @@ void zboss_signal_handler(zb_bufid_t bufid)
 		if (err) {
 			LOG_ERR("Failed to schedule app alarm: %d", err);
 		}
+		break;
+	case ZB_BDB_SIGNAL_STEERING:
+		dk_set_led_off(IDENTIFY_LED);
 		break;
 	default:
 		break;

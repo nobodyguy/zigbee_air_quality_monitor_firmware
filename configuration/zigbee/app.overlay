@@ -15,6 +15,5 @@
 		altitude = <290>;
 		measure-mode = "normal";
 		temperature-offset = <6>;
-		auto-calibration;
 	};
 };

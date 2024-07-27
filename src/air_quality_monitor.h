@@ -210,4 +210,11 @@ int air_quality_monitor_update_humidity(void);
  */
 int air_quality_monitor_update_co2(void);
 
+/**
+ * @brief Triggers forced CO2 recalibration of the SCD4X sensor 
+ *
+ * @return 0 if success, error code if failure.
+ */
+int air_quality_monitor_calibrate(void);
+
 #endif /* AIR_QUALITY_MONITOR_H */

@@ -133,3 +133,11 @@ int air_quality_monitor_update_co2(void)
 
 	return err;
 }
+
+int air_quality_monitor_calibrate(void)
+{
+	sensirion_scd4x_stop_periodic_measurement(scd);
+	sensirion_scd4x_calibrate(scd);
+	sensirion_scd4x_start_periodic_measurement(scd);
+	return 0;
+}

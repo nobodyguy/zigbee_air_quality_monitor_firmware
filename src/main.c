@@ -290,7 +290,6 @@ static void button_changed(uint32_t button_state, uint32_t has_changed)
 					/* Start identification mode */
 					ZB_SCHEDULE_APP_CALLBACK(start_identifying, 0);
 				} else {
-					// TODO fix - this is triggered after startup
 					dk_set_led_on(IDENTIFY_LED);
 					LOG_DBG("Network steering was started");
 					zb_nvram_clear();

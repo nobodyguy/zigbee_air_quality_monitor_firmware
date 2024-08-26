@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Jan Gnip
+ * Copyright (c) 2024 Jan Gnip
  * ZBOSS Zigbee 3.0
  *
  * Copyright (c) 2012-2022 DSR Corporation, Denver CO, USA.

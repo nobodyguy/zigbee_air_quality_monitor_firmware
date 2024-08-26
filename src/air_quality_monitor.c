@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Jan Gnip
+ * Copyright (c) 2024 Jan Gnip
  * Copyright (c) 2022 Nordic Semiconductor ASA
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -102,7 +102,7 @@ int air_quality_monitor_update_humidity(void)
 	return err;
 }
 
-int air_quality_monitor_update_co2(void)
+int air_quality_monitor_update_co2(double* co2)
 {
 	int err = 0;
 
@@ -112,6 +112,7 @@ int air_quality_monitor_update_co2(void)
 	struct sensor_value sensor_value;
 	err = sensor_channel_get(scd, SENSOR_CHAN_CO2, &sensor_value);
 	measured_co2 = sensor_value_to_double(&sensor_value);
+	*co2 = measured_co2;
 	if (err) {
 		LOG_ERR("Failed to get sensor co2: %d", err);
 	} else {

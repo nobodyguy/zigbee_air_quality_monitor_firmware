@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Jan Gnip
+ * Copyright (c) 2024 Jan Gnip
  * Copyright (c) 2022 Nordic Semiconductor ASA
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -24,6 +24,7 @@
 
 #include "zb_range_extender.h"
 #include "air_quality_monitor.h"
+#include "rgb_led.h"
 
 /* Manufacturer name (32 bytes). */
 #define ZIGBEE_MANUF_NAME "DIY"
@@ -254,9 +255,19 @@ static void check_air_quality(zb_bufid_t bufid)
 			LOG_ERR("Failed to update humidity: %d", err);
 		}
 
-		err = air_quality_monitor_update_co2();
+		double co2 = 0.0;
+		err = air_quality_monitor_update_co2(&co2);
 		if (err) {
 			LOG_ERR("Failed to update co2: %d", err);
+			return;
+		}
+
+		if (co2 < 1000.0) {
+			rgb_led_green();
+		} else if (co2 > 1600.0) {
+			rgb_led_red();
+		} else {
+			rgb_led_orange();
 		}
 	}
 
@@ -305,14 +316,16 @@ static void button_changed(uint32_t button_state, uint32_t has_changed)
 			dk_set_led_on(STATUS_LED);
 		} else {
 			/* Button changed its state to released */
-			zb_ret_t zb_err_code =
+			zb_ret_t zb_err =
 				ZB_SCHEDULE_APP_ALARM_CANCEL(check_air_quality, ZB_ALARM_ANY_PARAM);
-			ZVUNUSED(zb_err_code);
+			if (zb_err) {
+				LOG_ERR("Failed to cancel scheduled app alarm: %d", zb_err);
+			}
 
 			air_quality_monitor_calibrate();
 			dk_set_led_off(STATUS_LED);
 
-			zb_ret_t zb_err = ZB_SCHEDULE_APP_ALARM(
+			zb_err = ZB_SCHEDULE_APP_ALARM(
 				check_air_quality, 0,
 				ZB_MILLISECONDS_TO_BEACON_INTERVAL(AIR_QUALITY_CHECK_PERIOD_MSEC));
 			if (zb_err) {
@@ -394,6 +407,7 @@ void main(void)
 	gpio_init();
 	register_factory_reset_button(FACTORY_RESET_BUTTON);
 
+	rgb_led_init();
 	air_quality_monitor_init();
 
 	/* Register device context (endpoint) */

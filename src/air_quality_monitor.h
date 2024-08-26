@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Jan Gnip
+ * Copyright (c) 2024 Jan Gnip
  * Copyright (c) 2022 Nordic Semiconductor ASA
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -208,7 +208,7 @@ int air_quality_monitor_update_humidity(void);
  *
  * @return 0 if success, error code if failure.
  */
-int air_quality_monitor_update_co2(void);
+int air_quality_monitor_update_co2(double* co2);
 
 /**
  * @brief Triggers forced CO2 recalibration of the SCD4X sensor 

@@ -61,6 +61,10 @@
 /* Button to start Factory Reset */
 #define FACTORY_RESET_BUTTON PAIRING_BUTTON
 
+/* Same as FACTORY_RESET_PROBE_TIME */
+#define LONG_PRESS_TIMEOUT K_SECONDS(1)
+struct k_timer long_press_timer;
+
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 	     "Console device is not ACM CDC UART device");
 LOG_MODULE_REGISTER(app, CONFIG_ZIGBEE_AIR_QUALITY_MONITOR_LOG_LEVEL);
@@ -313,23 +317,34 @@ static void button_changed(uint32_t button_state, uint32_t has_changed)
 	if (USER_BUTTON & has_changed) {
 		if (USER_BUTTON & button_state) {
 			/* Button changed its state to pressed */
-			dk_set_led_on(STATUS_LED);
+			k_timer_start(&long_press_timer, LONG_PRESS_TIMEOUT, K_NO_WAIT);
 		} else {
 			/* Button changed its state to released */
-			zb_ret_t zb_err =
-				ZB_SCHEDULE_APP_ALARM_CANCEL(check_air_quality, ZB_ALARM_ANY_PARAM);
-			if (zb_err) {
-				LOG_ERR("Failed to cancel scheduled app alarm: %d", zb_err);
-			}
+			if (k_timer_status_get(&long_press_timer) > 0) {
+				/* Timer expired before button was released, indicates long press */
+				dk_set_led_on(STATUS_LED);
+				zb_ret_t zb_err = ZB_SCHEDULE_APP_ALARM_CANCEL(check_air_quality,
+									       ZB_ALARM_ANY_PARAM);
+				if (zb_err) {
+					LOG_ERR("Failed to cancel scheduled app alarm: %d", zb_err);
+				}
 
-			air_quality_monitor_calibrate();
-			dk_set_led_off(STATUS_LED);
+				LOG_INF("Calibrating CO2 sensor");
+				air_quality_monitor_calibrate();
+				dk_set_led_off(STATUS_LED);
 
-			zb_err = ZB_SCHEDULE_APP_ALARM(
-				check_air_quality, 0,
-				ZB_MILLISECONDS_TO_BEACON_INTERVAL(AIR_QUALITY_CHECK_PERIOD_MSEC));
-			if (zb_err) {
-				LOG_ERR("Failed to schedule app alarm: %d", zb_err);
+				zb_err = ZB_SCHEDULE_APP_ALARM(
+					check_air_quality, 0,
+					ZB_MILLISECONDS_TO_BEACON_INTERVAL(
+						AIR_QUALITY_CHECK_PERIOD_MSEC));
+				if (zb_err) {
+					LOG_ERR("Failed to schedule app alarm: %d", zb_err);
+				}
+			} else {
+				/* Short button press */
+				k_timer_stop(&long_press_timer);
+				LOG_INF("Toggling RGB LED state");
+				rgb_led_toggle_state();
 			}
 		}
 	}

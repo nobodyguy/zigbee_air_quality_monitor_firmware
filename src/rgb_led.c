@@ -21,14 +21,16 @@ LOG_MODULE_REGISTER(rgb_led, CONFIG_ZIGBEE_AIR_QUALITY_MONITOR_LOG_LEVEL);
 #define RGB(_r, _g, _b) { .r = (_r), .g = (_g), .b = (_b) }
 
 static const struct led_rgb colors[] = {
-	RGB(0xff, 0x00, 0x00), /* red */
-	RGB(0x00, 0xff, 0x00), /* green */
-	RGB(0xff, 0x80, 0x00), /* orange */
+	RGB(0x20, 0x00, 0x00), /* red */
+	RGB(0x00, 0x20, 0x00), /* green */
+	RGB(0x20, 0x10, 0x00), /* orange */
+	RGB(0x00, 0x00, 0x00), /* black=off */
 };
 
 struct led_rgb pixel;
 size_t current_color = SIZE_MAX;
 static const struct device *const strip = DEVICE_DT_GET(STRIP_NODE);
+bool active = false;
 
 void rgb_led_init(void)
 {
@@ -42,12 +44,29 @@ void rgb_led_init(void)
 
 void rgb_led_update_color(size_t color)
 {
+	if (!active) {
+		return;
+	}
 	current_color = color;
 	memset(&pixel, 0x00, sizeof(pixel));
 	memcpy(&pixel, &colors[current_color], sizeof(struct led_rgb));
 	int rc = led_strip_update_rgb(strip, &pixel, STRIP_NUM_PIXELS);
 	if (rc) {
 		LOG_ERR("couldn't update strip: %d", rc);
+	}
+}
+
+void rgb_led_toggle_state(void)
+{
+	if (active) {
+		current_color = 3;
+		rgb_led_update_color(current_color);
+		active = !active;
+	} else {
+		active = !active;
+		if (current_color != SIZE_MAX) {
+			rgb_led_update_color(current_color);
+		}
 	}
 }
 

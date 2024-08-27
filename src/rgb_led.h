@@ -8,6 +8,8 @@
 #define RGB_LED_H
 
 void rgb_led_init(void);
+void rgb_led_toggle_state(void);
+
 void rgb_led_green(void);
 void rgb_led_orange(void);
 void rgb_led_red(void);

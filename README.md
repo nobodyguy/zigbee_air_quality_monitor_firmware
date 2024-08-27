@@ -2,6 +2,16 @@
 Opensource HA compatible air quality monitor with CO2, temperature and humidity measurements.\
 Based on **nRF Connect SDK v2.2.99**.
 
+![Board closed](./images/board1.jpg)
+![Board open](./images/board2.jpg)
+
+## Usage
+Left button press - Triggers Zigbee network steering or LED indication (if connected to Zigbee network).\
+Left button long press (>1sec) - Factory reset.
+
+Right button press - Toggles RGB LED air quality indication.\
+Right button long press (>1sec) - Triggers forced CO2 recalibration of SCD40 sensor.
+
 ## Init west workspace (automatic)
 Use nRF Connect for VS Code extension.
 And only apply the patches manually:

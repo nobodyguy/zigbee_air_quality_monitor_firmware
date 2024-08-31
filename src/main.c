@@ -375,7 +375,6 @@ void zboss_signal_handler(zb_bufid_t bufid)
 	zb_ret_t err = RET_OK;
 
 	//zigbee_led_status_update(bufid, STATUS_LED);
-
 	/* Detect ZBOSS startup */
 	switch (signal) {
 	case ZB_ZDO_SIGNAL_SKIP_STARTUP:
@@ -388,6 +387,7 @@ void zboss_signal_handler(zb_bufid_t bufid)
 		}
 		break;
 	case ZB_BDB_SIGNAL_STEERING:
+	case ZB_BDB_SIGNAL_DEVICE_REBOOT:
 		dk_set_led_off(IDENTIFY_LED);
 		break;
 	default:

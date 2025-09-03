@@ -1,0 +1,25 @@
+From a5b7da5b3da8f28550740fadf213a12537c175a8 Mon Sep 17 00:00:00 2001
+From: nobodyguy <4577368+nobodyguy@users.noreply.github.com>
+Date: Tue, 2 Sep 2025 20:06:14 +0000
+Subject: [PATCH] Set Zigbee FACTORY_RESET_PROBE_TIME to 3 seconds
+
+---
+ subsys/zigbee/lib/zigbee_app_utils/zigbee_app_utils.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/subsys/zigbee/lib/zigbee_app_utils/zigbee_app_utils.c b/subsys/zigbee/lib/zigbee_app_utils/zigbee_app_utils.c
+index 765bb22ce..7df707408 100644
+--- a/subsys/zigbee/lib/zigbee_app_utils/zigbee_app_utils.c
++++ b/subsys/zigbee/lib/zigbee_app_utils/zigbee_app_utils.c
+@@ -39,7 +39,7 @@
+ #define IEEE_ADDR_BUF_SIZE       17
+ 
+ #if defined CONFIG_ZIGBEE_FACTORY_RESET
+-#define FACTORY_RESET_PROBE_TIME K_SECONDS(1)
++#define FACTORY_RESET_PROBE_TIME K_SECONDS(3)
+ #endif /* CONFIG_ZIGBEE_FACTORY_RESET */
+ 
+ LOG_MODULE_REGISTER(zigbee_app_utils, CONFIG_ZIGBEE_APP_UTILS_LOG_LEVEL);
+-- 
+2.34.1
+

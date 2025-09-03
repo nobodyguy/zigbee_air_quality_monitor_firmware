@@ -62,7 +62,7 @@
 #define FACTORY_RESET_BUTTON PAIRING_BUTTON
 
 /* Same as FACTORY_RESET_PROBE_TIME */
-#define LONG_PRESS_TIMEOUT K_SECONDS(1)
+#define LONG_PRESS_TIMEOUT K_SECONDS(3)
 struct k_timer long_press_timer;
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),

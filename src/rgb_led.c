@@ -59,14 +59,17 @@ void rgb_led_update_color(size_t color)
 void rgb_led_toggle_state(void)
 {
 	if (active) {
+		active = !active;
 		current_color = 3;
 		rgb_led_update_color(current_color);
-		active = !active;
 	} else {
 		active = !active;
-		if (current_color != SIZE_MAX) {
-			rgb_led_update_color(current_color);
-		}
+		/* If no color has been measured yet, default to off until
+		 * the next measurement cycle sets the correct color.
+		 * Otherwise restore the last known color immediately.
+		 */
+		size_t color_to_show = (current_color != SIZE_MAX) ? current_color : 3;
+		rgb_led_update_color(color_to_show);
 	}
 }
 

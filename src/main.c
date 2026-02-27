@@ -184,7 +184,10 @@ static void toggle_identify_led(zb_bufid_t bufid)
 	static int blink_status;
 
 	dk_set_led(IDENTIFY_LED, (++blink_status) % 2);
-	ZB_SCHEDULE_APP_ALARM(toggle_identify_led, bufid, ZB_MILLISECONDS_TO_BEACON_INTERVAL(100));
+	if (bufid) {
+		zb_buf_free(bufid);
+	}
+	ZB_SCHEDULE_APP_ALARM(toggle_identify_led, 0, ZB_MILLISECONDS_TO_BEACON_INTERVAL(100));
 }
 
 /**@brief Function to handle identify notification events on the first endpoint.
@@ -263,15 +266,14 @@ static void check_air_quality(zb_bufid_t bufid)
 		err = air_quality_monitor_update_co2(&co2);
 		if (err) {
 			LOG_ERR("Failed to update co2: %d", err);
-			return;
-		}
-
-		if (co2 < 1000.0) {
-			rgb_led_green();
-		} else if (co2 > 1600.0) {
-			rgb_led_red();
 		} else {
-			rgb_led_orange();
+			if (co2 < 1000.0) {
+				rgb_led_green();
+			} else if (co2 > 1600.0) {
+				rgb_led_red();
+			} else {
+				rgb_led_orange();
+			}
 		}
 	}
 

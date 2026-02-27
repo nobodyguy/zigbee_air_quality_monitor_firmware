@@ -15,6 +15,6 @@ manifest:
     - name: sensirion_drivers
       path: modules/sensirion_drivers
       url: https://github.com/nobodyguy/sensirion_zephyr_drivers.git
-      revision: main
+      revision: 985e166ff664fc1117d4fc8395d3be5861ae8f3d
 self:
     path: project

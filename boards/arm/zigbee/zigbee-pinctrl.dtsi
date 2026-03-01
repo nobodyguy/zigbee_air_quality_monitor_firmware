@@ -8,6 +8,7 @@
 		group1 {
 			psels = <NRF_PSEL(TWIM_SDA, 0, 26)>,
 					<NRF_PSEL(TWIM_SCL, 0, 27)>;
+			bias-disable; /* Level shifter has pullups -> disable internal pullups */
 		};
 	};
 
@@ -15,6 +16,7 @@
 		group1 {
 			psels = <NRF_PSEL(TWIM_SDA, 0, 26)>,
 					<NRF_PSEL(TWIM_SCL, 0, 27)>;
+			bias-disable; /* Level shifter has pullups -> disable internal pullups */
 			low-power-enable;
 		};
 	};

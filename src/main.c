@@ -18,9 +18,17 @@
 #include <zigbee/zigbee_error_handler.h>
 #include <dk_buttons_and_leds.h>
 
+/* Set while a shell command is accessing the sensor directly.
+ * check_air_quality skips I2C when this is non-zero to prevent
+ * concurrent bus access from the ZBOSS and shell threads.
+ */
+static atomic_t sensor_busy = ATOMIC_INIT(0);
+
 #ifdef CONFIG_USB_DEVICE_STACK
 #include <zephyr/usb/usb_device.h>
 #endif /* CONFIG_USB_DEVICE_STACK */
+
+#include <zephyr/shell/shell.h>
 
 #include "zb_range_extender.h"
 #include "air_quality_monitor.h"
@@ -247,6 +255,12 @@ static void check_air_quality(zb_bufid_t bufid)
 {
 	ZVUNUSED(bufid);
 
+	if (atomic_get(&sensor_busy)) {
+		/* A shell command is using the sensor — skip this cycle */
+		LOG_DBG("Sensor busy, skipping air quality check");
+		goto reschedule;
+	}
+
 	int err = air_quality_monitor_check_air_quality();
 
 	if (err) {
@@ -266,7 +280,7 @@ static void check_air_quality(zb_bufid_t bufid)
 		err = air_quality_monitor_update_co2(&co2);
 		if (err) {
 			LOG_ERR("Failed to update co2: %d", err);
-		} else {
+		} else if (co2 > 0.0) {
 			if (co2 < 1000.0) {
 				rgb_led_green();
 			} else if (co2 > 1600.0) {
@@ -277,6 +291,7 @@ static void check_air_quality(zb_bufid_t bufid)
 		}
 	}
 
+reschedule:
 	zb_ret_t zb_err = ZB_SCHEDULE_APP_ALARM(
 		check_air_quality, 0,
 		ZB_MILLISECONDS_TO_BEACON_INTERVAL(AIR_QUALITY_CHECK_PERIOD_MSEC));
@@ -353,6 +368,62 @@ static void button_changed(uint32_t button_state, uint32_t has_changed)
 
 	check_factory_reset_button(button_state, has_changed);
 }
+
+static int cmd_scd4x_self_test(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	atomic_set(&sensor_busy, 1);
+
+	shell_print(sh, "Starting SCD4X self test (~10 seconds)...");
+
+	int err = air_quality_monitor_self_test();
+
+	if (err) {
+		shell_error(sh, "SCD4X self test FAILED (err %d)", err);
+	} else {
+		shell_print(sh, "SCD4X self test PASSED");
+	}
+
+	atomic_set(&sensor_busy, 0);
+
+	return err;
+}
+
+static int cmd_scd4x_factory_reset(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	atomic_set(&sensor_busy, 1);
+
+	shell_print(sh, "Performing SCD4X factory reset...");
+
+	int err = air_quality_monitor_factory_reset();
+
+	if (err) {
+		shell_error(sh, "SCD4X factory reset FAILED (err %d)", err);
+	} else {
+		shell_print(sh, "SCD4X factory reset complete");
+	}
+
+	atomic_set(&sensor_busy, 0);
+
+	return err;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(scd4x_cmds,
+	SHELL_CMD_ARG(self_test, NULL,
+		"Run the SCD4X built-in self test (~10 seconds).",
+		cmd_scd4x_self_test, 1, 0),
+	SHELL_CMD_ARG(factory_reset, NULL,
+		"Erase all SCD4X user settings and restore factory defaults.",
+		cmd_scd4x_factory_reset, 1, 0),
+	SHELL_SUBCMD_SET_END
+);
+
+SHELL_CMD_REGISTER(scd4x, &scd4x_cmds, "SCD4X sensor commands.", NULL);
 
 /**@brief Function for initializing LEDs and Buttons. */
 static void gpio_init(void)

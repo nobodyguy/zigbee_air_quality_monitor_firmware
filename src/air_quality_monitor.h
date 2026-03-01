@@ -217,4 +217,19 @@ int air_quality_monitor_update_co2(double* co2);
  */
 int air_quality_monitor_calibrate(void);
 
+/**
+ * @brief Performs a factory reset of the SCD4X sensor, erasing all user
+ *        settings stored in EEPROM and restoring factory defaults.
+ *
+ * @return 0 if success, error code if failure.
+ */
+int air_quality_monitor_factory_reset(void);
+
+/**
+ * @brief Performs the SCD4X built-in self test. Blocks for ~10 seconds.
+ *
+ * @return 0 if no malfunction detected, error code if failure.
+ */
+int air_quality_monitor_self_test(void);
+
 #endif /* AIR_QUALITY_MONITOR_H */

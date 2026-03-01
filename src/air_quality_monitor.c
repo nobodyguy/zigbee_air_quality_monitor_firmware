@@ -55,7 +55,7 @@ int air_quality_monitor_update_temperature(void)
 		temperature_attribute =
 			(int16_t)(measured_temperature *
 				  ZCL_TEMPERATURE_MEASUREMENT_MEASURED_VALUE_MULTIPLIER);
-		LOG_INF("Attribute T:%10d", temperature_attribute);
+		LOG_INF("Temperature: %6.2f °C", measured_temperature);
 
 		/* Set ZCL attribute */
 		zb_zcl_status_t status = zb_zcl_set_attr_val(
@@ -87,7 +87,7 @@ int air_quality_monitor_update_humidity(void)
 		/* Convert measured value to attribute value, as specified in ZCL */
 		humidity_attribute = (int16_t)(measured_humidity *
 					       ZCL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_MULTIPLIER);
-		LOG_INF("Attribute H:%10d", humidity_attribute);
+		LOG_INF("Humidity:    %6.2f %%", measured_humidity);
 
 		zb_zcl_status_t status = zb_zcl_set_attr_val(
 			AIR_QUALITY_MONITOR_ENDPOINT_NB, ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT,
@@ -115,10 +115,16 @@ int air_quality_monitor_update_co2(double* co2)
 	*co2 = measured_co2;
 	if (err) {
 		LOG_ERR("Failed to get sensor co2: %d", err);
+	} else if (measured_co2 == 0.0) {
+		/* SCD40 returns CO2 = 0 before the first optical cycle completes
+		 * after startup. Not an error — just skip the attribute update
+		 * and let the next scheduled measurement pick up a valid value.
+		 */
+		LOG_WRN("CO2 reading is 0 ppm, skipping (sensor not ready yet)");
 	} else {
 		/* Convert measured value to attribute value, as specified in ZCL */
 		co2_attribute = measured_co2 * ZCL_CO2_MEASUREMENT_MEASURED_VALUE_MULTIPLIER;
-		LOG_INF("Attribute CO2:%10f", co2_attribute);
+		LOG_INF("CO2:         %6.0f ppm", measured_co2);
 
 		zb_zcl_status_t status =
 			zb_zcl_set_attr_val(AIR_QUALITY_MONITOR_ENDPOINT_NB,
@@ -141,4 +147,47 @@ int air_quality_monitor_calibrate(void)
 	sensirion_scd4x_calibrate(scd);
 	sensirion_scd4x_start_periodic_measurement(scd);
 	return 0;
+}
+
+int air_quality_monitor_factory_reset(void)
+{
+	int err;
+
+	err = sensirion_scd4x_stop_periodic_measurement(scd);
+	if (err) {
+		LOG_ERR("Failed to stop periodic measurement: %d", err);
+		return err;
+	}
+
+	err = sensirion_scd4x_factory_reset(scd);
+	if (err) {
+		LOG_ERR("Factory reset failed: %d", err);
+	} else {
+		LOG_INF("SCD4X factory reset complete");
+	}
+
+	sensirion_scd4x_start_periodic_measurement(scd);
+	return err;
+}
+
+int air_quality_monitor_self_test(void)
+{
+	int err;
+
+	err = sensirion_scd4x_stop_periodic_measurement(scd);
+	if (err) {
+		LOG_ERR("Failed to stop periodic measurement: %d", err);
+		return err;
+	}
+
+	LOG_INF("SCD4X self test started, this takes ~10 seconds...");
+	err = sensirion_scd4x_self_test(scd);
+	if (err) {
+		LOG_ERR("SCD4X self test FAILED: %d", err);
+	} else {
+		LOG_INF("SCD4X self test PASSED");
+	}
+
+	sensirion_scd4x_start_periodic_measurement(scd);
+	return err;
 }

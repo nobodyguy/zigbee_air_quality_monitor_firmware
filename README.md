@@ -12,6 +12,12 @@ Left button long press (>1sec) - Factory reset.
 Right button press - Toggles RGB LED air quality indication.\
 Right button long press (>1sec) - Triggers forced CO2 recalibration of SCD40 sensor.
 
+There are multiple USB UART commands available:
+```bash
+scd4x self_test # sensor self test
+scd4x factory_reset # sensor factory reset, needs recalibration afterwards
+```
+
 ## Init west workspace (automatic)
 Use nRF Connect for VS Code extension.
 And only apply the patches manually:
@@ -29,7 +35,7 @@ cd ./project
 ```
 
 ## Building
-`west build -b xiao_ble`
+`west build -b zigbee`
 
 ## Flashing
 `west flash --runner blackmagicprobe`
